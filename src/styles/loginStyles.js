@@ -1,0 +1,100 @@
+import { StyleSheet } from 'react-native';
+
+export default StyleSheet.create({
+  screen: { flex: 1, backgroundColor: '#F0FDF4' },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    paddingTop: 32, // <-- AÑADIDO: Espacio para la barra de notificaciones
+  },
+  header: { alignItems: 'center', marginBottom: 32 },
+  logoContainer: {
+    width: 64,
+    height: 64,
+    backgroundColor: '#22c55e', // green-600
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    elevation: 5,
+  },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#166534' }, // <-- CAMBIO: 28 -> 24
+  subtitle: { fontSize: 14, color: '#52525b' }, // <-- CAMBIO: 16 -> 14
+  card: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 24,
+    boxShadow: '0 5px 15px rgba(0,0,0,0.1)', // Para web
+    elevation: 10, // Para Android
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 24,
+  },
+  tabButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 6,
+    gap: 8,
+  },
+  tabButtonActive: {
+    backgroundColor: '#FFFFFF',
+    boxShadow: '0 1px 5px rgba(0,0,0,0.1)', // Para web
+    elevation: 2, // Para Android
+  },
+  tabLabel: { fontSize: 14, color: '#6B7280' },
+  tabLabelActive: { fontWeight: '600', color: '#166534' },
+  formHeader: { alignItems: 'center', marginBottom: 16 },
+  formTitle: { fontSize: 18, fontWeight: '600', color: '#1f2937' }, // <-- CAMBIO: 20 -> 18
+  formSubtitle: { fontSize: 14, color: '#6B7280', marginTop: 4 },
+  inputGroup: { marginBottom: 16 },
+  label: { fontSize: 14, color: '#374151', marginBottom: 8, fontWeight: '500' },
+  input: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    backgroundColor: '#F9FAFB',
+  },
+  loginButton: {
+    backgroundColor: '#22c55e',
+    paddingVertical: 12, // <-- CAMBIO: 14 -> 12
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  loginButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold' }, // <-- CAMBIO: 16 -> 14
+  divider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 24 },
+  demoButton: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  demoButtonText: { color: '#374151', fontSize: 14, fontWeight: '500' },
+  demoCredentials: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 8,
+  },
+  footerText: {
+    position: 'absolute',
+    bottom: 20,
+    fontSize: 12,
+    color: '#6B7280',
+  },
+});
