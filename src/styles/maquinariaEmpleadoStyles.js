@@ -329,5 +329,60 @@ export default StyleSheet.create({
     fontSize: 14,
     color: COLORES.texto,
     marginLeft: 8,
-  }
+  },
+
+  // --- (NUEVO) Estilos para Maquinaria Asignada ---
+  assignedContainer: {
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: '#E0F2FE', // Un fondo azul claro para destacar
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#7DD3FC',
+  },
+  assignedTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#0369A1', // Azul oscuro
+    marginBottom: 16,
+  },
+  assignedCard: {
+    backgroundColor: COLORES.blanco,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
+  },
+  assignedCardImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  assignedCardContent: {
+    flex: 1,
+  },
+  assignedMachineName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORES.texto,
+  },
+  assignedMachineId: {
+    fontSize: 12,
+    color: COLORES.gris,
+    marginBottom: 8,
+  },
+  buttonComplete: {
+    backgroundColor: '#3B82F6', // Azul para la acción principal de esta sección
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
 });

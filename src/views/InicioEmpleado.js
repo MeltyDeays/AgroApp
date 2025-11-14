@@ -1,10 +1,13 @@
+// src/views/InicioEmpleado.js
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
-import styles from '../styles/empleadoStyles'; // Reutilizamos tus estilos!
-import { CheckSquare, Tractor, LogOut } from 'lucide-react-native'; // O 'react-native-vector-icons'
+import styles from '../styles/empleadoStyles'; 
+import { CheckSquare, Tractor, LogOut } from 'lucide-react-native'; 
+// --- 1. Importa la campana ---
+import NotificationBellEmpleado from '../components/NotificationBellEmpleado'; 
 
 export default function InicioEmpleado() {
   const navigation = useNavigation();
@@ -12,15 +15,31 @@ export default function InicioEmpleado() {
 
   const manejarCerrarSesion = async () => {
     await signOut(auth);
-    // El listener en App.js se encargará de moverlo al Login
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
       <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingTop: 24, paddingBottom: 48 }}>
         <View style={styles.mainContainer}>
-          <Text style={styles.headerTitle}>Portal del Empleado</Text>
-          <Text style={styles.headerSubtitle}>Bienvenido, {user?.displayName || user?.email}</Text>
+
+          {/* --- 2. Modifica la cabecera --- */}
+          <View style={{ 
+            flexDirection: 'row', 
+            justifyContent: 'space-between', 
+            alignItems: 'flex-start', 
+            marginBottom: 8 
+          }}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.headerTitle}>Portal del Empleado</Text>
+              <Text style={styles.headerSubtitle} numberOfLines={1} ellipsizeMode="tail">
+                Bienvenido, {user?.displayName || user?.email}
+              </Text>
+            </View>
+            {/* --- 3. Añade la campana --- */}
+            <NotificationBellEmpleado />
+          </View>
+          {/* --- Fin de la modificación --- */}
+
 
           {/* Tarjeta de Asistencia */}
           <View style={styles.card}>
@@ -33,7 +52,7 @@ export default function InicioEmpleado() {
             </Text>
             <TouchableOpacity
               style={styles.primaryButton}
-              onPress={() => navigation.navigate('VistaEmpleado')} // Navega a tu vista de asistencia
+              onPress={() => navigation.navigate('VistaEmpleado')} 
             >
               <Text style={styles.primaryButtonText}>Ir a Asistencia</Text>
             </TouchableOpacity>
@@ -49,8 +68,8 @@ export default function InicioEmpleado() {
               Consulta la disponibilidad y reserva maquinaria.
             </Text>
             <TouchableOpacity
-              style={[styles.primaryButton, { backgroundColor: '#2563EB' }]} // Botón azul
-              onPress={() => navigation.navigate('GestionMaquinariaEmpleado')} // Navega a la nueva vista
+              style={[styles.primaryButton, { backgroundColor: '#2563EB' }]} 
+              onPress={() => navigation.navigate('GestionMaquinariaEmpleado')} // Navega a la vista de empleado
             >
               <Text style={styles.primaryButtonText}>Ir a Maquinaria</Text>
             </TouchableOpacity>

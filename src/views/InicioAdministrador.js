@@ -3,23 +3,23 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, useWindowDimensions, SafeAreaView, ScrollView, Animated, Pressable, Alert
 } from 'react-native';
-// --- (MODIFICADO) --- Se añade 'Tractor'
 import { LogOut, Menu, X, LayoutDashboard, Users, Package, Clock, Truck, ShoppingCart, Tractor } from 'lucide-react-native';
 import { signOut } from 'firebase/auth';
-import { auth } from '../../firebaseConfig'; // Ajusta ruta
-import styles from '../styles/adminStyles'; // Ajusta ruta
+import { auth } from '../../firebaseConfig'; 
+import styles from '../styles/adminStyles'; 
 
-// --- (1) IMPORTAR LOS NUEVOS MÓDULOS ---
+// --- (1) IMPORTAR MÓDULOS Y CAMPANA ---
 import GestionUsuarios from './admin_modules/GestionUsuarios';
 import GestionProveedores from './admin_modules/GestionProveedores';
 import GestionCompras from './admin_modules/GestionCompras';
 import Dashboard from './admin_modules/Dashboard'; 
 import Productos from './admin_modules/Productos'; 
 import { VistaAsistencia } from './RegistroAsistencia'; 
-import GestionMaquinaria from './admin_modules/GestionMaquinaria'; // --- (MODIFICADO) --- Importar el módulo
+import GestionMaquinaria from './admin_modules/GestionMaquinaria';
+import NotificationBellAdmin from '../components/NotificationBellAdmin'; // <-- NUEVO
 
 
-// --- Componente Sidebar (se queda aquí por simplicidad) ---
+// --- Componente Sidebar (sin cambios) ---
 const AppSidebar = ({ activeModule, setActiveModule, onComprasClick }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, action: () => setActiveModule('dashboard') },
@@ -28,7 +28,6 @@ const AppSidebar = ({ activeModule, setActiveModule, onComprasClick }) => {
     { id: 'asistencia', label: 'Asistencia', icon: Clock, action: () => setActiveModule('asistencia') },
     { id: 'proveedores', label: 'Proveedores', icon: Truck, action: () => setActiveModule('proveedores') },
     { id: 'compras', label: 'Compras', icon: ShoppingCart, action: onComprasClick },
-    // --- (MODIFICADO) --- Añadir el nuevo item de menú
     { id: 'maquinaria', label: 'Maquinaria', icon: Tractor, action: () => setActiveModule('maquinaria') },
   ];
   return (
@@ -53,6 +52,9 @@ export default function InicioAdministrador({ navigation }) {
   const isLargeScreen = width >= 768;
   const sidebarAnimation = useRef(new Animated.Value(-300)).current;
   const [pedidoProveedor, setPedidoProveedor] = useState(null); 
+  
+  // (NUEVO) Ref para el módulo de maquinaria
+  const maquinariaRef = useRef(null);
 
   useEffect(() => {
     if (!isLargeScreen) {
@@ -72,7 +74,15 @@ export default function InicioAdministrador({ navigation }) {
     if (!isLargeScreen) setSidebarOpen(false); 
   };
 
-  // --- (2) RENDERMODULE ACTUALIZADO ---
+  // --- (NUEVO) Handler para la campana ---
+  const handleNotificationClick = () => {
+    setActiveModule('maquinaria');
+    // (Opcional) Si quisieras que vaya a la pestaña 0 (Solicitudes)
+    // maquinariaRef.current?.irAPestaña(0); 
+    if (!isLargeScreen) { setSidebarOpen(false); }
+  };
+
+  // --- renderModule ACTUALIZADO ---
   const renderModule = () => {
     switch (activeModule) {
       case 'usuarios':
@@ -85,11 +95,9 @@ export default function InicioAdministrador({ navigation }) {
         return <GestionProveedores onNavigateToPedido={handleNavigateToPedido} />;
       case 'compras':
         return <GestionCompras user={user} initialProveedor={pedidoProveedor} />;
-      
-      // --- (MODIFICADO) --- Añadir el caso para maquinaria
       case 'maquinaria':
-        return <GestionMaquinaria />;
-
+        // (NUEVO) Pasa la ref
+        return <GestionMaquinaria ref={maquinariaRef} />;
       case 'dashboard':
       default:
         return <ScrollView contentContainerStyle={{ flexGrow: 1 }}><Dashboard /></ScrollView>;
@@ -106,7 +114,7 @@ export default function InicioAdministrador({ navigation }) {
     }
   };
 
-  // Memoized Sidebar Content
+  // Memoized Sidebar Content (sin cambios)
   const sidebarContent = useMemo(() => (
     <AppSidebar
       activeModule={activeModule}
@@ -124,7 +132,7 @@ export default function InicioAdministrador({ navigation }) {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
-        {/* Sidebar */}
+        {/* Sidebar (sin cambios) */}
         {isLargeScreen ? (
           <View style={styles.sidebarWrapper}>{sidebarContent}</View>
         ) : (
@@ -135,25 +143,35 @@ export default function InicioAdministrador({ navigation }) {
             </Animated.View>
           </>
         )}
+        
         {/* Main Content Area */}
         <View style={styles.mainContent}>
-          {/* Header */}
+          {/* --- HEADER ACTUALIZADO --- */}
           <View style={styles.header}>
-            <View style={!isLargeScreen && { marginLeft: 50 }}>
+            <View style={!isLargeScreen && { marginLeft: 50, flex: 1 }}>
               <Text style={styles.headerTextSecondary}>Rol: Administrador</Text>
-              <Text style={styles.headerTextPrimary}>{user?.email}</Text>
+              <Text style={styles.headerTextPrimary} numberOfLines={1} ellipsizeMode="tail">
+                {user?.email}
+              </Text>
             </View>
-            <TouchableOpacity style={styles.button} onPress={handleLogout}>
-              <LogOut color="#374151" size={16} />
-              {isLargeScreen && <Text style={styles.buttonText}>Cerrar Sesión</Text>}
-            </TouchableOpacity>
+            
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {/* --- (NUEVO) Añadir campana de Admin --- */}
+              <NotificationBellAdmin onNotificationClick={handleNotificationClick} />
+
+              <TouchableOpacity style={styles.button} onPress={handleLogout}>
+                <LogOut color="#374151" size={16} />
+                {isLargeScreen && <Text style={styles.buttonText}>Cerrar Sesión</Text>}
+              </TouchableOpacity>
+            </View>
           </View>
+          {/* --- FIN DEL HEADER --- */}
 
           {/* Renderiza el Módulo Activo */}
           {renderModule()}
 
         </View>
-        {/* Botón de Menú Móvil */}
+        {/* Botón de Menú Móvil (sin cambios) */}
         {!isLargeScreen && (
           <TouchableOpacity style={styles.menuButton} onPress={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? <X color="#374151" size={20} /> : <Menu color="#374151" size={20} />}

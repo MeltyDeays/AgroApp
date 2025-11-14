@@ -10,6 +10,7 @@ import Toast from "react-native-toast-message";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebaseConfig"; 
+import { UserProvider } from "./src/context/UserContext"; // <-- 1. IMPORTAR
 
 // --- Importaciones de tus Vistas ---
 import LoginScreen from "./src/views/Login.js";
@@ -36,7 +37,6 @@ const AuthStack = () => (
 );
 
 // Stack para usuarios con rol de Administrador
-// (Sin cambios, InicioAdministrador maneja su propia navegación interna)
 const AdminStack = () => (
   <Stack.Navigator>
     <Stack.Screen
@@ -49,28 +49,27 @@ const AdminStack = () => (
 );
 
 // --- STACK DE EMPLEADO (ACTUALIZADO) ---
-// Ahora contiene 3 pantallas, comenzando por el menú InicioEmpleado
 const EmployeeStack = () => (
   <Stack.Navigator>
     <Stack.Screen
-      name="InicioEmpleado" // 1. Esta es ahora la pantalla principal del empleado
+      name="InicioEmpleado"
       component={InicioEmpleado}
       options={{ headerShown: false }}
     />
     <Stack.Screen
-      name="VistaEmpleado" // 2. Esta es tu pantalla de Asistencia
+      name="VistaEmpleado"
       component={VistaEmpleado}
       options={{ headerShown: false }}
     />
     <Stack.Screen
-      name="GestionMaquinariaEmpleado" // 3. Esta es la nueva pantalla de Maquinaria
+      name="GestionMaquinariaEmpleado"
       component={GestionMaquinariaEmpleado}
       options={{ headerShown: false }}
     />
   </Stack.Navigator>
 );
 
-// --- COMPONENTE PRINCIPAL APP (SIN CAMBIOS EN LA LÓGICA) ---
+// --- COMPONENTE PRINCIPAL APP (MODIFICADO) ---
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -80,12 +79,10 @@ export default function App() {
       try {
         if (authenticatedUser) {
           
-          // Usamos "usuarios" como en tu archivo original
           const userDocRef = doc(db, "usuarios", authenticatedUser.uid); 
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
-            // Añadimos el rol y otros datos de Firestore al objeto de usuario
             setUser({ ...authenticatedUser, ...userDoc.data() }); 
           } else {
             console.warn("Usuario autenticado pero sin documento en Firestore (en 'usuarios').");
@@ -106,7 +103,6 @@ export default function App() {
   }, []);
 
   if (loading) {
-    // (Tu estilo de loading original)
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
@@ -114,29 +110,26 @@ export default function App() {
     );
   }
 
-  // Comprobamos 'role' o 'rol' como en tu archivo original
   const userRole = user?.role || user?.rol; 
 
   return (
-    <>
+    <UserProvider>
       <NavigationContainer>
         {(() => {
           if (!user) {
             return <AuthStack />;
           }
-          // El switch ahora funciona con el nuevo EmployeeStack
           switch (userRole) { 
             case 'admin':
               return <AdminStack />;
-            case 'empleado': // <-- Esto ahora carga el menú de empleado
+            case 'empleado':
               return <EmployeeStack />;
             default:
-              // Si no tiene rol (o un rol no reconocido), va al login
               return <AuthStack />;
           }
         })()}
       </NavigationContainer>
       <Toast />
-    </>
+    </UserProvider>
   );
 }
