@@ -9,7 +9,7 @@ import { Picker } from '@react-native-picker/picker';
 import styles from '../../styles/adminStyles'; 
 
 // --- Formulario de Proveedores ---
-// (Esta parte no tiene cambios, se incluye para que copies el archivo completo)
+// (Este componente no cambia, se sigue usando para EDITAR)
 const ProveedorForm = ({ onBackToList, initialData = null }) => {
   const isEditing = !!initialData;
   const [formData, setFormData] = useState({
@@ -40,7 +40,8 @@ const ProveedorForm = ({ onBackToList, initialData = null }) => {
       delete updateData.id;
       result = await updateProveedor(initialData.id, updateData); //
     } else {
-      result = await createProveedor(formData); //
+      // Esta ruta ya no se usa, pero la dejamos por seguridad
+      result = { success: false, error: "La creación se maneja desde Gestión de Usuarios." };
     }
     setLoading(false);
     if (result.success) {
@@ -78,8 +79,9 @@ const ProveedorForm = ({ onBackToList, initialData = null }) => {
           returnKeyType="next" onSubmitEditing={() => emailRef.current?.focus()} blurOnSubmit={false} />
       </View>
       <View style={styles.inputGroup}><Text style={styles.label}>Email (Opcional)</Text>
-        <TextInput ref={emailRef} style={styles.input} autoCapitalize="none" keyboardType="email-address" onChangeText={(v) => handleChange('email', v)} value={formData.email} 
-          returnKeyType="next" onSubmitEditing={() => direccionRef.current?.focus()} blurOnSubmit={false} />
+        <TextInput ref={emailRef} style={[styles.input, { backgroundColor: '#E5E7EB', color: '#6B7280' }]} autoCapitalize="none" keyboardType="email-address" onChangeText={(v) => handleChange('email', v)} value={formData.email} 
+          editable={false} // El email no se debe editar, es la cuenta
+        />
       </View>
       <View style={styles.inputGroup}><Text style={styles.label}>Dirección (Opcional)</Text>
         <TextInput ref={direccionRef} style={styles.input} onChangeText={(v) => handleChange('direccion', v)} value={formData.direccion} 
@@ -104,7 +106,7 @@ const ProveedorForm = ({ onBackToList, initialData = null }) => {
 };
 
 // --- Lista de Proveedores ---
-const ProveedorList = ({ onGoToAddForm, onEditProveedor, onRealizarPedido, refreshKey }) => {
+const ProveedorList = ({ onEditProveedor, onRealizarPedido, refreshKey }) => {
   const [proveedorList, setProveedorList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortOrder, setSortOrder] = useState('asc');
@@ -136,35 +138,9 @@ const ProveedorList = ({ onGoToAddForm, onEditProveedor, onRealizarPedido, refre
     const isExpanded = expandedProveedorId === item.id;
     const toggleExpansion = () => setExpandedProveedorId(isExpanded ? null : item.id);
 
-    // --- FUNCIÓN MODIFICADA ---
-    const handleDelete = () => {
-      Alert.alert( "Confirmar Eliminación", `¿Eliminar a ${item.nombreEmpresa}?`, //
-        [ { text: "Cancelar" },
-          { 
-            text: "Eliminar", 
-            style: "destructive", 
-            onPress: async () => {
-              try {
-                const result = await deleteProveedor(item.id); //
-                
-                if (result.success) {
-                  Alert.alert("Éxito", "Proveedor eliminado.");
-                  fetchProveedores(); //
-                } else {
-                  Alert.alert("Error", result.error); //
-                }
-              } catch (error) {
-                console.error("Error fatal al eliminar (GestionProveedores):", error);
-                Alert.alert("Error Inesperado", "No se pudo ejecutar la acción. Revise la consola.");
-              } finally {
-                setExpandedProveedorId(null); //
-              }
-            }
-          }
-        ]
-      );
-    };
-    // --- FIN DE MODIFICACIÓN ---
+    // --- (INICIO DE MODIFICACIÓN) ---
+    // La función handleDelete se elimina.
+    // --- (FIN DE MODIFICACIÓN) ---
 
     return (
       <View style={styles.userItem}>
@@ -186,20 +162,28 @@ const ProveedorList = ({ onGoToAddForm, onEditProveedor, onRealizarPedido, refre
             <View style={styles.detailRow}><Text style={styles.detailLabel}>Dirección:</Text><Text style={styles.detailValue}>{item.direccion || 'N/A'}</Text></View>
             <View style={styles.detailRow}><Text style={styles.detailLabel}>Suministra:</Text><Text style={styles.detailValue}>{item.productos_suministrados || 'N/A'}</Text></View>
             <View style={styles.detailRow}><Text style={styles.detailLabel}>Creado:</Text><Text style={styles.detailValue}>{item.fechaCreacion?.toDate ? item.fechaCreacion.toDate().toLocaleDateString('es-ES') : 'N/A'}</Text></View>
+            
+            {/* --- (INICIO DE MODIFICACIÓN) --- */}
             <View style={styles.expandedActionsContainer}>
               <TouchableOpacity style={[styles.actionButton, styles.pedidoButton]} onPress={() => onRealizarPedido(item)}>
                 <ShoppingBag size={16} color="#FFFFFF" />
                 <Text style={[styles.actionButtonText, styles.pedidoButtonText]}>Realizar Pedido</Text>
               </TouchableOpacity>
+              
+              {/* Botón de eliminar deshabilitado de esta vista */}
+              {/*
               <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={handleDelete}>
                 <Trash2 size={16} color="#B91C1C" />
                 <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Eliminar</Text>
               </TouchableOpacity>
+              */}
+
               <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={() => onEditProveedor(item)}>
                 <Edit size={16} color="#1D4ED8" />
-                <Text style={[styles.actionButtonText, styles.editButtonText]}>Editar</Text>
+                <Text style={[styles.actionButtonText, styles.editButtonText]}>Editar Detalles</Text>
               </TouchableOpacity>
             </View>
+            {/* --- (FIN DE MODIFICACIÓN) --- */}
           </View>
         )}
       </View>
@@ -208,13 +192,25 @@ const ProveedorList = ({ onGoToAddForm, onEditProveedor, onRealizarPedido, refre
 
   return (
     <View style={styles.listContainer}>
+      
+      {/* --- (INICIO DE MODIFICACIÓN) --- */}
       <View style={styles.listHeader}>
         <Text style={styles.formTitle}>Gestión de Proveedores</Text>
+        {/* Botón de Agregar deshabilitado
         <TouchableOpacity style={styles.addUserButton} onPress={onGoToAddForm}>
           <Truck size={18} color="#FFFFFF" />
           <Text style={styles.addUserButtonText}>Agregar Proveedor</Text>
         </TouchableOpacity>
+        */}
       </View>
+
+      {/* Texto de ayuda */}
+      <Text style={{...styles.userEmail, paddingHorizontal: 0, marginBottom: 20, textAlign: 'center', fontSize: 13}}>
+        Los proveedores ahora se crean en <Text style={{fontWeight: 'bold'}}>Gestión de Usuarios</Text> (rol "Proveedor").
+        Desde aquí puede <Text style={{fontWeight: 'bold'}}>Editar</Text> sus datos de contacto o <Text style={{fontWeight: 'bold'}}>Realizar Pedidos</Text>.
+      </Text>
+      {/* --- (FIN DE MODIFICACIÓN) --- */}
+
       <View style={styles.searchContainer}>
         <Search size={20} color="#6B7280" style={styles.searchInputIcon} />
         <TextInput
@@ -246,7 +242,6 @@ const ProveedorList = ({ onGoToAddForm, onEditProveedor, onRealizarPedido, refre
 
 
 // --- Componente Principal del Módulo de Proveedores ---
-// (Esta parte no tiene cambios, se incluye para que copies el archivo completo)
 export default function GestionProveedores({ onNavigateToPedido }) {
   const [viewMode, setViewMode] = useState('list'); // 'list', 'add', 'edit'
   const [refreshKey, setRefreshKey] = useState(0);
@@ -265,14 +260,18 @@ export default function GestionProveedores({ onNavigateToPedido }) {
     }
   };
 
-  if (viewMode === 'add') {
-    return <ProveedorForm onBackToList={handleBackToList} />;
-  }
+  // --- (INICIO DE MODIFICACIÓN) ---
+  // Se elimina el 'viewMode === 'add''
+  // if (viewMode === 'add') {
+  //   return <ProveedorForm onBackToList={handleBackToList} />;
+  // }
+  // --- (FIN DE MODIFICACIÓN) ---
+
   if (viewMode === 'edit') {
     return <ProveedorForm onBackToList={handleBackToList} initialData={editingProveedor} />;
   }
   return <ProveedorList
-            onGoToAddForm={() => setViewMode('add')}
+            // onGoToAddForm={() => setViewMode('add')} // <-- Se elimina esta prop
             onEditProveedor={handleEditProveedor}
             onRealizarPedido={onNavigateToPedido} //
             refreshKey={refreshKey}

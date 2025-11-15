@@ -3,12 +3,14 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, useWindowDimensions, SafeAreaView, ScrollView, Animated, Pressable, Alert
 } from 'react-native';
-import { LogOut, Menu, X, LayoutDashboard, Users, Package, Clock, Truck, ShoppingCart, Tractor } from 'lucide-react-native';
+// --- (INICIO DE MODIFICACIÓN) ---
+import { LogOut, Menu, X, LayoutDashboard, Users, Package, Clock, Truck, ShoppingCart, Tractor, Map, MapPin } from 'lucide-react-native'; // <-- Añadido 'Map' y 'MapPin'
+// --- (FIN DE MODIFICACIÓN) ---
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig'; 
 import styles from '../styles/adminStyles'; 
 
-// --- (1) IMPORTAR MÓDULOS Y CAMPANA ---
+// --- Importar Módulos y Campana ---
 import GestionUsuarios from './admin_modules/GestionUsuarios';
 import GestionProveedores from './admin_modules/GestionProveedores';
 import GestionCompras from './admin_modules/GestionCompras';
@@ -16,11 +18,15 @@ import Dashboard from './admin_modules/Dashboard';
 import Productos from './admin_modules/Productos'; 
 import { VistaAsistencia } from './RegistroAsistencia'; 
 import GestionMaquinaria from './admin_modules/GestionMaquinaria';
-import NotificationBellAdmin from '../components/NotificationBellAdmin'; // <-- NUEVO
+import NotificationBellAdmin from '../components/NotificationBellAdmin'; 
+import MapaFinca from './admin_modules/MapaFinca'; // <-- El nombre de tu archivo de mapa
+// --- (INICIO DE MODIFICACIÓN) ---
+import GestionSectores from './admin_modules/GestionSectores'; // <-- AÑADIDO
+// --- (FIN DE MODIFICACIÓN) ---
 
 
-// --- Componente Sidebar (sin cambios) ---
-const AppSidebar = ({ activeModule, setActiveModule, onComprasClick }) => {
+// --- Componente Sidebar (Modificado) ---
+const AppSidebar = ({ activeModule, setActiveModule, onComprasClick, navigation }) => { 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, action: () => setActiveModule('dashboard') },
     { id: 'usuarios', label: 'Usuarios', icon: Users, action: () => setActiveModule('usuarios') },
@@ -29,6 +35,10 @@ const AppSidebar = ({ activeModule, setActiveModule, onComprasClick }) => {
     { id: 'proveedores', label: 'Proveedores', icon: Truck, action: () => setActiveModule('proveedores') },
     { id: 'compras', label: 'Compras', icon: ShoppingCart, action: onComprasClick },
     { id: 'maquinaria', label: 'Maquinaria', icon: Tractor, action: () => setActiveModule('maquinaria') },
+    // --- (INICIO DE MODIFICACIÓN) ---
+    { id: 'sectores', label: 'Gestionar Sectores', icon: MapPin, action: () => setActiveModule('sectores') }, // <-- AÑADIDO
+    { id: 'mapa', label: 'Ver Mapa Finca', icon: Map, action: () => navigation.navigate('MapaFinca') },
+    // --- (FIN DE MODIFICACIÓN) ---
   ];
   return (
     <View style={styles.sidebarContainer}>
@@ -53,7 +63,6 @@ export default function InicioAdministrador({ navigation }) {
   const sidebarAnimation = useRef(new Animated.Value(-300)).current;
   const [pedidoProveedor, setPedidoProveedor] = useState(null); 
   
-  // (NUEVO) Ref para el módulo de maquinaria
   const maquinariaRef = useRef(null);
 
   useEffect(() => {
@@ -74,11 +83,8 @@ export default function InicioAdministrador({ navigation }) {
     if (!isLargeScreen) setSidebarOpen(false); 
   };
 
-  // --- (NUEVO) Handler para la campana ---
   const handleNotificationClick = () => {
     setActiveModule('maquinaria');
-    // (Opcional) Si quisieras que vaya a la pestaña 0 (Solicitudes)
-    // maquinariaRef.current?.irAPestaña(0); 
     if (!isLargeScreen) { setSidebarOpen(false); }
   };
 
@@ -96,8 +102,12 @@ export default function InicioAdministrador({ navigation }) {
       case 'compras':
         return <GestionCompras user={user} initialProveedor={pedidoProveedor} />;
       case 'maquinaria':
-        // (NUEVO) Pasa la ref
         return <GestionMaquinaria ref={maquinariaRef} />;
+      // --- (INICIO DE MODIFICACIÓN) ---
+      case 'sectores': // <-- AÑADIDO
+        return <GestionSectores />;
+      // El mapa ya no se renderiza aquí, se navega a él.
+      // --- (FIN DE MODIFICACIÓN) ---
       case 'dashboard':
       default:
         return <ScrollView contentContainerStyle={{ flexGrow: 1 }}><Dashboard /></ScrollView>;
@@ -114,25 +124,30 @@ export default function InicioAdministrador({ navigation }) {
     }
   };
 
-  // Memoized Sidebar Content (sin cambios)
+  // Memoized Sidebar Content (Modificado)
   const sidebarContent = useMemo(() => (
     <AppSidebar
       activeModule={activeModule}
       setActiveModule={(module) => {
-        setPedidoProveedor(null); 
-        setActiveModule(module);
+        // Los módulos que navegan (mapa) son manejados por su 'action'
+        // Los que cambian la vista principal usan 'setActiveModule'
+        if (module !== 'mapa') {
+          setPedidoProveedor(null); 
+          setActiveModule(module);
+        }
         if (!isLargeScreen) { setSidebarOpen(false); }
       }}
       onComprasClick={() => {
         handleComprasClick();
       }}
+      navigation={navigation} // <-- Pasar 'navigation' al Sidebar
     />
-  ), [activeModule, isLargeScreen]); 
+  ), [activeModule, isLargeScreen, navigation]); // <-- Añadido 'navigation'
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.container}>
-        {/* Sidebar (sin cambios) */}
+        {/* Sidebar */}
         {isLargeScreen ? (
           <View style={styles.sidebarWrapper}>{sidebarContent}</View>
         ) : (
@@ -146,7 +161,7 @@ export default function InicioAdministrador({ navigation }) {
         
         {/* Main Content Area */}
         <View style={styles.mainContent}>
-          {/* --- HEADER ACTUALIZADO --- */}
+          {/* Header */}
           <View style={styles.header}>
             <View style={!isLargeScreen && { marginLeft: 50, flex: 1 }}>
               <Text style={styles.headerTextSecondary}>Rol: Administrador</Text>
@@ -156,7 +171,6 @@ export default function InicioAdministrador({ navigation }) {
             </View>
             
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {/* --- (NUEVO) Añadir campana de Admin --- */}
               <NotificationBellAdmin onNotificationClick={handleNotificationClick} />
 
               <TouchableOpacity style={styles.button} onPress={handleLogout}>
@@ -165,13 +179,12 @@ export default function InicioAdministrador({ navigation }) {
               </TouchableOpacity>
             </View>
           </View>
-          {/* --- FIN DEL HEADER --- */}
 
           {/* Renderiza el Módulo Activo */}
           {renderModule()}
 
         </View>
-        {/* Botón de Menú Móvil (sin cambios) */}
+        {/* Botón de Menú Móvil */}
         {!isLargeScreen && (
           <TouchableOpacity style={styles.menuButton} onPress={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? <X color="#374151" size={20} /> : <Menu color="#374151" size={20} />}

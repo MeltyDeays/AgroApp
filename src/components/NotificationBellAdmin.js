@@ -1,5 +1,5 @@
 // src/components/NotificationBellAdmin.js
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,48 +8,84 @@ import {
   SafeAreaView,
   FlatList,
   StyleSheet,
-} from 'react-native';
-import { Bell, X, Clock, Undo2 } from 'lucide-react-native'; // Undo2 para devoluciones
-import * as MaquinariaService from '../services/maquinariaService';
-import { useUsers } from "../context/UserContext"; // <-- IMPORTAR
+} from "react-native";
+import { Bell, X, Clock, Undo2, Send } from "lucide-react-native";
+import * as MaquinariaService from "../services/maquinariaService";
+import * as PedidoService from "../services/pedidoProveedorService";
+import { useUsers } from "../context/UserContext";
+import { auth } from "../../firebaseConfig";
 
 export default function NotificationBellAdmin({ onNotificationClick }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [solicitudes, setSolicitudes] = useState([]);
   const [adminNotifications, setAdminNotifications] = useState([]);
-  const { getUserFullName } = useUsers(); // <-- USAR EL HOOK
+
+  const [respuestasPedidos, setRespuestasPedidos] = useState([]);
+  const { getUserFullName } = useUsers(); // <-- Obtenemos la función
+  const user = auth.currentUser;
 
   useEffect(() => {
-    // Escucha las solicitudes pendientes
+    // Escucha las solicitudes pendientes de maquinaria
     const unsubReservas = MaquinariaService.streamReservasPendientes((data) => {
-      // Añadimos un tipo para poder diferenciarlas
-      const typedData = data.map(d => ({ ...d, notificationType: 'pending' }));
+      const typedData = data.map((d) => ({
+        ...d,
+        notificationType: "pending",
+      }));
       setSolicitudes(typedData);
     });
 
     // Escucha las notificaciones generales de admin (devoluciones, etc.)
     const unsubAdmin = MaquinariaService.streamNotificacionesAdmin((data) => {
-      const typedData = data.map(d => ({ ...d, notificationType: d.type || 'info' }));
+      const typedData = data.map((d) => ({
+        ...d,
+        notificationType: d.type || "info",
+      }));
       setAdminNotifications(typedData);
     });
+
+    // (NUEVO) Escucha las respuestas de los proveedores
+    let unsubPedidos = () => {};
+    if (user) {
+      unsubPedidos = PedidoService.streamRespuestasProveedor(
+        user.uid,
+        (data) => {
+          // El tipo 'pedidoRespuesta' ya se añade en el servicio
+          setRespuestasPedidos(data);
+        }
+      );
+    }
 
     return () => {
       unsubReservas();
       unsubAdmin();
+      unsubPedidos();
     };
-  }, []);
+  }, [user]);
 
   // Combinar y ordenar todas las notificaciones
   const allNotifications = useMemo(() => {
-    const combined = [...solicitudes, ...adminNotifications];
+    const combined = [
+      ...solicitudes,
+      ...adminNotifications,
+      ...respuestasPedidos,
+    ];
+
     // Ordenar por fecha de creación, las más nuevas primero
     combined.sort((a, b) => {
-      const dateA = a.createdAt?.toDate() || a.requestedAt?.toDate() || 0;
-      const dateB = b.createdAt?.toDate() || b.requestedAt?.toDate() || 0;
+      const dateA =
+        a.createdAt?.toDate() ||
+        a.requestedAt?.toDate() ||
+        a.fechaCreacion?.toDate() ||
+        0;
+      const dateB =
+        b.createdAt?.toDate() ||
+        b.requestedAt?.toDate() ||
+        b.fechaCreacion?.toDate() ||
+        0;
       return dateB - dateA;
     });
     return combined;
-  }, [solicitudes, adminNotifications]);
+  }, [solicitudes, adminNotifications, respuestasPedidos]);
 
   const unreadCount = allNotifications.length;
 
@@ -58,25 +94,29 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
   };
 
   const handleItemClick = (item) => {
-    if (item.notificationType === 'pending') {
-      // Navigate to machinery screen
+    if (item.notificationType === "pending") {
+      // Click en solicitud de maquinaria
       if (onNotificationClick) {
-        onNotificationClick(item);
+        onNotificationClick(item); // Navega a 'maquinaria'
       }
-    } else if (item.notificationType === 'return') {
-      // Mark as read in the database
+    } else if (item.notificationType === "return") {
+      // Click en devolución de maquinaria
       MaquinariaService.marcarNotificacionAdminLeida(item.id);
+    } else if (item.notificationType === "pedidoRespuesta") {
+      // (NUEVO) Click en respuesta de proveedor
+      PedidoService.marcarRespuestaPedidoLeida(item.id);
+      // if (onNotificationClick) onNotificationClick(item); // Podrías navegar a 'compras'
     }
-    
-    // Close the modal after handling the click
+
     setModalVisible(false);
   };
 
   const renderNotifItem = ({ item }) => {
-    if (item.notificationType === 'pending') {
+    // Caso 1: Solicitud de Maquinaria
+    if (item.notificationType === "pending") {
       return (
-        <TouchableOpacity 
-          style={styles.notifCard} 
+        <TouchableOpacity
+          style={styles.notifCard}
           onPress={() => handleItemClick(item)}
         >
           <View style={styles.notifIcon}>
@@ -85,37 +125,81 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
           <View style={styles.notifContent}>
             <Text style={styles.notifTitle}>Nueva Solicitud de Reserva</Text>
             <Text style={styles.notifMessage}>
-              {getUserFullName(item.requestedById)} solicitó {item.machineName}
+              {getUserFullName(item.requestedById) ||
+                `Usuario ${item.requestedById.substring(0, 5)}...`}{" "}
+              solicitó {item.machineName}
             </Text>
             <Text style={styles.notifTime}>
-              {item.requestedAt?.toDate().toLocaleDateString('es-ES')}
+              {item.requestedAt?.toDate().toLocaleDateString("es-ES")}
             </Text>
           </View>
         </TouchableOpacity>
       );
     }
 
-    if (item.notificationType === 'return') {
+    // Caso 2: Devolución de Maquinaria
+    if (item.notificationType === "return") {
       return (
-        <TouchableOpacity 
-          style={styles.notifCard} 
+        <TouchableOpacity
+          style={styles.notifCard}
           onPress={() => handleItemClick(item)}
         >
           <View style={styles.notifIcon}>
             <Undo2 size={24} color="#10B981" />
           </View>
           <View style={styles.notifContent}>
-            <Text style={[styles.notifTitle, { color: '#059669' }]}>{item.title}</Text>
-            <Text style={styles.notifMessage}>
-              {item.message}
+            <Text style={[styles.notifTitle, { color: "#059669" }]}>
+              {item.title}
             </Text>
+            <Text style={styles.notifMessage}>{item.message}</Text>
             <Text style={styles.notifTime}>
-              {item.createdAt?.toDate().toLocaleDateString('es-ES')}
+              {item.createdAt?.toDate().toLocaleDateString("es-ES")}
             </Text>
           </View>
         </TouchableOpacity>
       );
     }
+
+    // --- (INICIO DE MODIFICACIÓN) ---
+    // (NUEVO) Caso 3: Respuesta de Proveedor
+    if (item.notificationType === "pedidoRespuesta") {
+      const isAccepted = item.estado === "En proceso";
+      const title = isAccepted ? "Pedido Aceptado" : "Pedido Rechazado";
+      const color = isAccepted ? "#1D4ED8" : "#B91C1C"; // Azul o Rojo
+
+      // Usamos getUserFullName (que ahora funciona) o un texto alternativo
+      const providerName =
+        getUserFullName(item.idProveedor) ||
+        `Proveedor ${item.idProveedor.substring(0, 5)}...`;
+
+      return (
+        <TouchableOpacity
+          style={[
+            styles.notifCard,
+            {
+              borderColor: color,
+              backgroundColor: isAccepted ? "#EFF6FF" : "#FEF2F2",
+            },
+          ]}
+          onPress={() => handleItemClick(item)}
+        >
+          <View style={styles.notifIcon}>
+            <Send size={24} color={color} />
+          </View>
+          <View style={styles.notifContent}>
+            <Text style={[styles.notifTitle, { color: color }]}>{title}</Text>
+            <Text style={styles.notifMessage}>
+              {providerName} ha respondido a tu pedido de "{item.nombreProducto}
+              ".
+            </Text>
+            <Text style={styles.notifTime}>
+              {item.fechaCreacion?.toDate().toLocaleDateString("es-ES")}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      );
+    }
+    // --- (FIN DE MODIFICACIÓN) ---
 
     return null; // No renderizar otros tipos por ahora
   };
@@ -159,34 +243,54 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
 }
 
 const styles = StyleSheet.create({
-  bellButton: { position: 'relative', padding: 8, marginRight: 10 },
+  bellButton: { position: "relative", padding: 8, marginRight: 10 },
   badge: {
-    position: 'absolute', top: 4, right: 4, backgroundColor: '#EF4444',
-    borderRadius: 10, width: 20, height: 20,
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: '#F9FAFB'
+    position: "absolute",
+    top: 4,
+    right: 4,
+    backgroundColor: "#EF4444",
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#F9FAFB",
   },
-  badgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: 'bold' },
-  modalContainer: { flex: 1, backgroundColor: '#F9FAFB' },
+  badgeText: { color: "#FFFFFF", fontSize: 10, fontWeight: "bold" },
+  modalContainer: { flex: 1, backgroundColor: "#F9FAFB" },
   modalHeader: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', padding: 20, borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
   },
-  modalTitle: { fontSize: 22, fontWeight: '600', color: '#1F2937' },
-  emptyText: { textAlign: 'center', marginTop: 40, fontSize: 16, color: '#6B7280' },
+  modalTitle: { fontSize: 22, fontWeight: "600", color: "#1F2937" },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 40,
+    fontSize: 16,
+    color: "#6B7280",
+  },
   notifCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 12, padding: 16,
-    flexDirection: 'row', alignItems: 'flex-start', marginBottom: 16,
-    borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   notifUnread: {
-    backgroundColor: '#F0F9FF',
-    borderColor: '#BAE6FD',
+    backgroundColor: "#F0F9FF",
+    borderColor: "#BAE6FD",
   },
   notifIcon: { marginRight: 12, marginTop: 2 },
   notifContent: { flex: 1 },
-  notifTitle: { fontSize: 16, fontWeight: '600', color: '#1F2937' },
-  notifMessage: { fontSize: 14, color: '#4B5563', marginTop: 4 },
-  notifTime: { fontSize: 12, color: '#9CA3AF', marginTop: 8 },
+  notifTitle: { fontSize: 16, fontWeight: "600", color: "#1F2937" },
+  notifMessage: { fontSize: 14, color: "#4B5563", marginTop: 4 },
+  notifTime: { fontSize: 12, color: "#9CA3AF", marginTop: 8 },
 });

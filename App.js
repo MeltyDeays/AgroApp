@@ -10,17 +10,24 @@ import Toast from "react-native-toast-message";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebaseConfig"; 
-import { UserProvider } from "./src/context/UserContext"; // <-- 1. IMPORTAR
+import { UserProvider } from "./src/context/UserContext";
 
 // --- Importaciones de tus Vistas ---
 import LoginScreen from "./src/views/Login.js";
 import InicioAdministrador from "./src/views/InicioAdministrador.js";
-import VistaAdministrador from "./src/views/admin_modules/GestionMaquinaria.js";
 
-// --- IMPORTACIONES DE EMPLEADO (ACTUALIZADAS) ---
-import InicioEmpleado from "./src/views/InicioEmpleado.js"; // <-- NUEVO: El menú principal del empleado
-import VistaEmpleado from "./src/views/VistaEmpleado.js"; // <-- Ya existía (Asistencia)
-import GestionMaquinariaEmpleado from "./src/views/empleado_modules/GestionMaquinaria.js"; // <-- NUEVO: Maquinaria
+// --- IMPORTACIONES DE EMPLEADO ---
+import InicioEmpleado from "./src/views/InicioEmpleado.js"; 
+import VistaEmpleado from "./src/views/VistaEmpleado.js"; 
+import GestionMaquinariaEmpleado from "./src/views/empleado_modules/GestionMaquinaria.js";
+
+// --- IMPORTACIÓN DE PROVEEDOR ---
+import InicioProveedor from "./src/views/proveedor_modules/InicioProveedor.js";
+
+// --- (INICIO DE MODIFICACIÓN) ---
+// 1. Importar la nueva vista del Mapa
+import MapaFinca from "./src/views/admin_modules/MapaFinca.js";
+// --- (FIN DE MODIFICACIÓN) ---
 
 
 const Stack = createNativeStackNavigator();
@@ -44,11 +51,21 @@ const AdminStack = () => (
       component={InicioAdministrador}
       options={{ headerShown: false }}
     />
+    
+    {/* --- (INICIO DE MODIFICACIÓN) --- */}
+    {/* 2. Añadir la pantalla del Mapa al Stack del Admin */}
+    <Stack.Screen
+      name="MapaFinca"
+      component={MapaFinca}
+      options={{ headerShown: false }}
+    />
+    {/* --- (FIN DE MODIFICACIÓN) --- */}
+
   </Stack.Navigator>
   
 );
 
-// --- STACK DE EMPLEADO (ACTUALIZADO) ---
+// --- STACK DE EMPLEADO ---
 const EmployeeStack = () => (
   <Stack.Navigator>
     <Stack.Screen
@@ -69,7 +86,19 @@ const EmployeeStack = () => (
   </Stack.Navigator>
 );
 
-// --- COMPONENTE PRINCIPAL APP (MODIFICADO) ---
+// --- STACK DE PROVEEDOR ---
+const ProveedorStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="InicioProveedor"
+      component={InicioProveedor}
+      options={{ headerShown: false }}
+    />
+  </Stack.Navigator>
+);
+
+
+// --- COMPONENTE PRINCIPAL APP ---
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -124,6 +153,8 @@ export default function App() {
               return <AdminStack />;
             case 'empleado':
               return <EmployeeStack />;
+            case 'proveedor': 
+              return <ProveedorStack />;
             default:
               return <AuthStack />;
           }

@@ -9,7 +9,6 @@ import { Picker } from '@react-native-picker/picker';
 import styles from '../../styles/adminStyles'; 
 
 // --- Formulario de Usuarios ---
-// (Esta parte no tiene cambios, se incluye para que copies el archivo completo)
 const UserForm = ({ onBackToList, initialData = null }) => {
   const isEditing = !!initialData;
   const [formData, setFormData] = useState({
@@ -115,6 +114,8 @@ const UserForm = ({ onBackToList, initialData = null }) => {
           onSubmitEditing={handleSubmit}
         />
       </View>
+      
+      {/* --- (INICIO DE MODIFICACIÓN) --- */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Rol de Usuario</Text>
         <View style={styles.pickerContainer}>
@@ -124,10 +125,13 @@ const UserForm = ({ onBackToList, initialData = null }) => {
             <Picker.Item label="Socio" value="socio" />
             <Picker.Item label="Maquinaria" value="maquinaria" />
             <Picker.Item label="Administrador" value="admin" />
+            <Picker.Item label="Proveedor" value="proveedor" /> {/* <-- AÑADIDO */}
           </Picker>
           <View style={styles.pickerIconContainer}><ChevronDown size={20} color="#6B7280" /></View>
         </View>
       </View>
+      {/* --- (FIN DE MODIFICACIÓN) --- */}
+
       <TouchableOpacity style={styles.registerButton} onPress={handleSubmit} disabled={loading}>
         {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.registerButtonText}>{isEditing ? "Guardar Cambios" : "Registrar Usuario"}</Text>}
       </TouchableOpacity>
@@ -171,6 +175,8 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
 
   const renderUserItem = ({ item }) => {
     const isExpanded = expandedUserId === item.id;
+    
+    // --- (INICIO DE MODIFICACIÓN) ---
     const getRoleStyle = (rol) => {
       switch (rol) {
         case 'admin': return styles.roleAdmin;
@@ -178,13 +184,15 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
         case 'bodeguero': return styles.roleBodeguero;
         case 'socio': return styles.roleSocio;
         case 'maquinaria': return styles.roleMaquinaria;
+        case 'proveedor': return styles.roleProveedor; // <-- AÑADIDO
         default: return styles.roleEmpleado;
       }
     };
+    // --- (FIN DE MODIFICACIÓN) ---
+
     const roleName = item.rol ? item.rol.charAt(0).toUpperCase() + item.rol.slice(1) : 'N/A';
     const toggleExpansion = () => setExpandedUserId(isExpanded ? null : item.id);
     
-    // --- FUNCIÓN MODIFICADA ---
     const handleDelete = () => {
       Alert.alert( "Confirmar Eliminación", `¿Eliminar a ${item.nombres}?`, //
         [ { text: "Cancelar" },
@@ -216,7 +224,6 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
         ]
       );
     };
-    // --- FIN DE MODIFICACIÓN ---
 
     return (
         <View style={styles.userItem}>
@@ -273,6 +280,8 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
           placeholderTextColor="#6B7280"
         />
       </View>
+
+      {/* --- (INICIO DE MODIFICACIÓN) --- */}
       <View style={styles.filterBar}>
         <View style={styles.filterGroup}>
           <Text style={styles.label}>Filtrar por Rol:</Text>
@@ -284,10 +293,13 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
               <Picker.Item label="Socio" value="socio" />
               <Picker.Item label="Maquinaria" value="maquinaria" />
               <Picker.Item label="Administrador" value="admin" />
+              <Picker.Item label="Proveedor" value="proveedor" /> {/* <-- AÑADIDO */}
             </Picker>
             <View style={styles.pickerIconContainer}><ChevronDown size={20} color="#6B7280" /></View>
           </View>
         </View>
+      {/* --- (FIN DE MODIFICACIÓN) --- */}
+
         <View style={styles.filterGroup}>
           <Text style={styles.label}>Ordenar A-Z:</Text>
           <View style={[styles.pickerContainer, styles.filterPicker]}>
@@ -307,7 +319,6 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
 };
 
 // --- Componente Principal del Módulo de Usuarios ---
-// (Esta parte no tiene cambios, se incluye para que copies el archivo completo)
 export default function GestionUsuarios() {
   const [viewMode, setViewMode] = useState('list'); // 'list', 'add', 'edit'
   const [refreshKey, setRefreshKey] = useState(0);

@@ -16,7 +16,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDPpGSUQPf1JSOkrfUegiyeNtl1aW_LnjU",
   authDomain: "appgranja-b98ca.firebaseapp.com",
   projectId: "appgranja-b98ca",
-  storageBucket: "appgranja-b98ca.firebasestorage.app", // Corregí el dominio aquí
+  storageBucket: "appgranja-b98ca.firebasestorage.app",
   messagingSenderId: "990841062699",
   appId: "1:990841062699:web:9b4033c82c54cb1ee9316e",
   measurementId: "G-8P43BY80LP"

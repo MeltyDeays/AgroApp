@@ -1,7 +1,8 @@
+// src/styles/adminStyles.js
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-  // ... (tus estilos de screen a cancelButtonText se mantienen igual)
+  // ... (tus estilos de screen a userItemRoleContainer se mantienen igual)
   screen: { flex: 1, backgroundColor: "#ffffffff" },
   container: { flex: 1, flexDirection: "row" },
   sidebarWrapper: {
@@ -262,9 +263,19 @@ export default StyleSheet.create({
   roleBodeguero: { color: "#1D4ED8", backgroundColor: "#DBEAFE" }, 
   roleSocio: { color: "#7E22CE", backgroundColor: "#F3E8FF" }, 
   roleMaquinaria: { color: "#4B5563", backgroundColor: "#F3F4F6" }, 
+  roleProveedor: { color: "#0891B2", backgroundColor: "#CFFAFE" }, 
+
+  // --- (INICIO DE MODIFICACIÓN) ---
+  // Estados de Pedidos (Nuevos)
+  statusEnEspera: { color: "#D97706", backgroundColor: "#FEF3C7" },   // Amarillo
+  statusEnProceso: { color: "#1D4ED8", backgroundColor: "#DBEAFE" }, // Azul
+  statusRechazada: { color: "#DC2626", backgroundColor: "#FEE2E2" }, // Rojo
+  statusRecibido: { color: "#059669", backgroundColor: "#D1FAE5" },  // Verde
+  // Estados de Compras (Antiguos)
   statusPendiente: { color: "#D97706", backgroundColor: "#FEF3C7" }, 
-  statusRecibido: { color: "#059669", backgroundColor: "#D1FAE5" }, 
   statusCancelado: { color: "#DC2626", backgroundColor: "#FEE2E2" }, 
+  // --- (FIN DE MODIFICACIÓN) ---
+
   ellipsisButton: { 
     padding: 5, 
   },
@@ -305,7 +316,7 @@ export default StyleSheet.create({
       marginTop: 12, 
       paddingTop: 12, 
       borderTopWidth: 1, 
-      borderTopColor: '#1f4ca5ff', 
+      borderTopColor: '#E5E7EB', // <-- Color corregido
   },
   actionButton: { 
     paddingVertical: 6,
@@ -354,7 +365,6 @@ export default StyleSheet.create({
     color: '#B91C1C', 
   },
 
-  // --- (NUEVO) ESTILOS PARA EL CAMPO DE FECHA ---
   dateInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -372,26 +382,31 @@ export default StyleSheet.create({
   },
   dateInputTextPlaceholder: {
     fontSize: 16,
-    color: '#740722ff', // Color de placeholder
+    color: '#9CA3AF', // <-- Color corregido
     flex: 1,
   },
   dateInputIcon: {
     marginLeft: 8,
   },
-
-  pickerContainer: {
-  borderWidth: 1,
-  borderColor: '#E5E7EB', // O tu COLORES.grisClaro
-  borderRadius: 8,
-  backgroundColor: '#F9FAFB', // O tu COLORES.fondo
-  marginBottom: 16,
-  overflow: 'hidden', // Para que el borde redondeado funcione en Android
-},
-picker: {
-  height: 50,
-  width: '100%',
-  backgroundColor: 'transparent', // Necesario para iOS
-  // En Android, el estilo se aplica al 'pickerContainer'
-  // En iOS, puedes necesitar ajustar el padding/margin
-}
+  
+  // (Añadido para el TabView en GestionCompras)
+  tabBar: {
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  tabIndicator: { 
+    height: 3, 
+    backgroundColor: '#2563eb', // Azul
+    borderRadius: 3 
+  },
+  tabLabel: { 
+    fontWeight: "600", 
+    color: '#6B7280', // Gris
+    textTransform: 'none', // Quita mayúsculas
+    fontSize: 14,
+  },
+  
 });

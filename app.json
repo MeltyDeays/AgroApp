@@ -16,7 +16,10 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Necesitamos tu ubicación para mostrarte en el mapa de la finca."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -26,9 +29,15 @@
       "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.CAMERA"
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
-      "package": "com.anonymous.AgroApp"
+      "package": "com.anonymous.AgroApp",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAw51QhPba0ycIEkC0RPVJgozUbwc4waH8"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"

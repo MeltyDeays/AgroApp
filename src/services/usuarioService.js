@@ -1,13 +1,15 @@
-import { collection, getDocs, query, orderBy, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore'; // updateDoc y deleteDoc son necesarios
+// src/services/usuarioService.js
+import { collection, getDocs, query, orderBy, doc, setDoc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore'; // AÑADIDO 'getDoc'
 import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import { initializeApp, getApp } from 'firebase/app';
 import { db, auth } from '../../firebaseConfig'; // 'auth' es nuestra instancia PRINCIPAL
 
 const usuariosCollection = collection(db, "usuarios");
+const proveedoresCollection = collection(db, "proveedores"); // <-- AÑADIDO
 
 /**
  * Registra un nuevo empleado en Firebase Auth y crea su documento en Firestore.
- * Usa una instancia secundaria de Auth para no cambiar el estado de sesión del admin.
+ * Si el rol es 'proveedor', crea un documento espejo en la colección 'proveedores'.
  */
 export const registerEmployee = async (formData) => {
     const { email, password, nombres, apellidos, cedula, edad, sector, rol } = formData;
@@ -30,7 +32,7 @@ export const registerEmployee = async (formData) => {
         const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
         const user = userCredential.user;
 
-        // Guarda la información detallada en Firestore
+        // 1. Guarda la información detallada en Firestore ('usuarios')
         await setDoc(doc(db, "usuarios", user.uid), {
             uid: user.uid,
             nombres: nombres,
@@ -43,6 +45,22 @@ export const registerEmployee = async (formData) => {
             role: rol, // Mantenemos ambos por compatibilidad
             fechaCreacion: new Date(),
         });
+
+        // --- (INICIO DE MODIFICACIÓN) ---
+        // 2. Si el rol es 'proveedor', crea un documento espejo en 'proveedores'
+        if (rol === 'proveedor') {
+            await setDoc(doc(db, "proveedores", user.uid), {
+                id: user.uid, // ¡Usamos el MISMO UID!
+                nombreEmpresa: nombres, // Usamos 'nombres' como 'nombreEmpresa'
+                contacto: apellidos,  // Usamos 'apellidos' como 'contacto'
+                email: email,
+                direccion: sector, // Usamos 'sector' como 'direccion'
+                telefono: '', // El admin puede editar esto después
+                productos_suministrados: '', // El admin puede editar esto después
+                fechaCreacion: new Date(),
+            });
+        }
+        // --- (FIN DE MODIFICACIÓN) ---
 
         return { success: true };
     } catch (error) {
@@ -59,6 +77,7 @@ export const registerEmployee = async (formData) => {
 
 /**
  * Obtiene todos los usuarios de la colección "usuarios", ordenados por nombre.
+ * (Sin cambios)
  */
 export const getAllUsers = async () => {
     try {
@@ -79,6 +98,7 @@ export const getAllUsers = async () => {
 
 /**
  * Actualiza los datos de un usuario específico en Firestore.
+ * (Sin cambios)
  */
 export const updateUser = async (userId, updatedData) => {
     if (!userId || !updatedData) {
@@ -94,7 +114,7 @@ export const updateUser = async (userId, updatedData) => {
 
         // Mantiene 'rol' y 'role' sincronizados si uno cambia
         if(updatedData.rol) updatedData.role = updatedData.rol;
-        if(updatedData.role) updatedData.rol = updatedData.role;
+        if(updatedData.role) updatedData.rol = updatedData.rol;
 
 
         await updateDoc(userDocRef, updatedData);
@@ -106,7 +126,7 @@ export const updateUser = async (userId, updatedData) => {
 };
 
 /**
- * Elimina el documento de un usuario de la colección "usuarios" en Firestore.
+ * Elimina el documento de un usuario de 'usuarios' y 'proveedores' (si existe).
  * NO elimina la cuenta de Firebase Authentication.
  */
 export const deleteUser = async (userId) => {
@@ -114,8 +134,27 @@ export const deleteUser = async (userId) => {
         return { success: false, error: "ID de usuario es requerido." };
     }
     try {
+        // --- (INICIO DE MODIFICACIÓN) ---
+        // 1. Obtenemos el rol del usuario antes de borrarlo
         const userDocRef = doc(db, "usuarios", userId);
-        await deleteDoc(userDocRef);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+
+            // 2. Borramos el documento de 'usuarios'
+            await deleteDoc(userDocRef);
+
+            // 3. Si era proveedor, borramos también el de 'proveedores'
+            if (userData && (userData.rol === 'proveedor' || userData.role === 'proveedor')) {
+                const proveedorDocRef = doc(db, "proveedores", userId);
+                await deleteDoc(proveedorDocRef);
+            }
+        } else {
+            console.warn("Se intentó borrar un usuario que no existe en Firestore:", userId);
+        }
+        // --- (FIN DE MODIFICACIÓN) ---
+
         // ¡Importante! La cuenta de Authentication sigue existiendo.
         return { success: true };
     } catch (error) {
