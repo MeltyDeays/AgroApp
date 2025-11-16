@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, useWindowDimensions, SafeAreaView, ScrollView, Animated, Pressable, Alert
 } from 'react-native';
+// 1. Añadimos 'Archive' al import
 import { LogOut, Menu, X, LayoutDashboard, Users, Package, Clock, Truck, ShoppingCart, Tractor, Map, MapPin, Archive } from 'lucide-react-native'; 
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig'; 
@@ -20,6 +21,7 @@ import GestionMaquinaria from './admin_modules/GestionMaquinaria';
 import NotificationBellAdmin from '../components/NotificationBellAdmin'; 
 import MapaFinca from './admin_modules/MapaFinca'; 
 import GestionSectores from './admin_modules/GestionSectores'; 
+// 2. Importamos el nuevo módulo de Almacenes
 import GestionAlmacenes from './admin_modules/GestionAlmacenes'; 
 
 
@@ -32,6 +34,7 @@ const AppSidebar = ({ activeModule, setActiveModule, onComprasClick, navigation 
     { id: 'empleados', label: 'Empleados', icon: Users, action: () => setActiveModule('empleados') }, 
     
     { id: 'productos', label: 'Productos', icon: Package, action: () => setActiveModule('productos') },
+    // 3. Añadimos el módulo al menú
     { id: 'almacenes', label: 'Almacenes', icon: Archive, action: () => setActiveModule('almacenes') }, 
     { id: 'asistencia', label: 'Asistencia', icon: Clock, action: () => setActiveModule('asistencia') },
     { id: 'proveedores', label: 'Proveedores', icon: Truck, action: () => setActiveModule('proveedores') },
@@ -105,10 +108,14 @@ export default function InicioAdministrador({ navigation }) {
         return <GestionUsuarios />;
       case 'empleados': 
         return <GestionEmpleados />;
+        
+      // --- (INICIO DE LA CORRECCIÓN) ---
       case 'productos':
-        return <ScrollView contentContainerStyle={{ flexGrow: 1 }}><Productos /></ScrollView>;
+        return <Productos />; // Quitamos el <ScrollView>
+      // --- (FIN DE LA CORRECCIÓN) ---
+        
       case 'almacenes':
-        return <GestionAlmacenes />; 
+        return <GestionAlmacenes />;
       case 'asistencia':
         return <VistaAsistencia navigation={navigation} />;
       case 'proveedores':
@@ -202,3 +209,11 @@ export default function InicioAdministrador({ navigation }) {
     </SafeAreaView>
   );
 }
+
+//Falta agregar una vista para compradores en los cuales pueden hacer pedidos, asi que falta hacer productos,
+//cada producto por ejemplo saco quintalero de arroz son 100Lb entonces al comprador hacer el pedido
+//selecciona la cantidad de sacos que quiere comprar y se le hace el total automaticamente y se envia la orden al admin
+//y este lo ve en gestion de compras
+//Luego el admin puede marcar como recibido el pedido y se le notifica al comprador que su pedido ya esta listo
+//Entonces segun la cantidad de sacos que compro se le descuenta del inventario de los almacenes
+//y se le notifica al admin si el inventario esta bajo para que pueda reponerlo.
