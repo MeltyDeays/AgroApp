@@ -11,7 +11,7 @@ export default StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 50, // Ajusta según tu barra de estado (tal vez 60 o 70)
+    top: 50, 
     left: 16,
     zIndex: 10,
     flexDirection: 'row',
@@ -30,19 +30,18 @@ export default StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
-  // --- (BOTÓN DE SEED ELIMINADO) ---
   markerContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#2563EB', // Azul
+    backgroundColor: '#2563EB', 
     justifyContent: 'center',
     alignItems: 'center',
     borderColor: '#FFFFFF',
     borderWidth: 2,
   },
   
-  // --- (ESTILOS PARA MODALES) ---
+  // --- (ESTILOS PARA MODALES MEJORADOS) ---
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -54,8 +53,13 @@ export default StyleSheet.create({
     width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 20,
+    padding: 24, 
     maxHeight: '80%', 
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
   },
   modalTitle: {
     fontSize: 20,
@@ -64,18 +68,20 @@ export default StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
   },
+  // MEJORA: Estilo para elementos de lista en Modales (Empleados/Tareas)
   listItem: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFFFFF', 
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    marginBottom: 8,
+    borderWidth: 1, 
+    borderColor: '#E5E7EB', 
+    marginBottom: 10, 
   },
   listText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#374151',
+    fontWeight: '500', 
   },
   emptyListText: {
     textAlign: 'center',
@@ -101,17 +107,17 @@ export default StyleSheet.create({
     backgroundColor: '#F9FAFB', 
     color: '#1F2937',
     marginBottom: 16,
-    textAlignVertical: 'top', // Para multiline
+    textAlignVertical: 'top', 
   },
   modalButtonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 16,
-    gap: 12, // Espacio entre botones
+    gap: 12, 
   },
   modalButtonConfirm: {
     flex: 1,
-    backgroundColor: '#10B981', // Verde
+    backgroundColor: '#10B981', 
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -132,5 +138,69 @@ export default StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 16,
-  }
+  },
+  
+  // --- (NUEVOS ESTILOS PARA TAREAS ACTUALES) ---
+  tasksHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginTop: 16,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    paddingBottom: 8,
+  },
+  taskCard: {
+    backgroundColor: '#FFFBEB', // Amarillo suave
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: '#F59E0B',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  taskTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  taskDetail: {
+    fontSize: 14,
+    color: '#4B5563',
+    marginBottom: 2,
+  },
+  taskStatus: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#10B981', 
+    marginTop: 8,
+  },
+  taskActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#FDE68A', 
+  },
+  buttonCompleteTask: {
+    backgroundColor: '#2563EB', 
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  buttonCompleteText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginLeft: 6,
+    fontSize: 14,
+  },
 });

@@ -8,20 +8,20 @@ import {
   updateDoc,
   doc,
   addDoc,
-  setDoc, // <-- AÑADIDO
+  setDoc, 
   Timestamp,
+  deleteDoc, 
+  orderBy 
 } from 'firebase/firestore';
 
 /**
  * Parsea un string de coordenadas (lng, lat) a un array de objetos.
- * INPUT: "-85.370, 12.170\n-85.365, 12.170\n-85.365, 12.165"
- * OUTPUT: [ { longitude: -85.370, latitude: 12.170 }, ... ]
  */
 const parseCoordenadasString = (coordsString) => {
   const coordsMapa = [];
-  const lineas = coordsString.split('\n'); // Separa por saltos de línea
+  const lineas = coordsString.split('\n'); 
   for (const linea of lineas) {
-    const pares = linea.split(','); // Separa "lng, lat"
+    const pares = linea.split(','); 
     if (pares.length === 2) {
       const lng = parseFloat(pares[0].trim());
       const lat = parseFloat(pares[1].trim());
@@ -35,7 +35,7 @@ const parseCoordenadasString = (coordsString) => {
   if (coordsMapa.length > 0) {
     const primero = coordsMapa[0];
     const ultimo = coordsMapa[coordsMapa.length - 1];
-    if (primero.longitude !== ultimo.longitude || primero.latitude !== ultimo.latitude) {
+    if (coordsMapa.length > 1 && (primero.longitude !== ultimo.longitude || primero.latitude !== ultimo.latitude)) {
       coordsMapa.push(primero);
     }
   }
@@ -47,20 +47,18 @@ const parseCoordenadasString = (coordsString) => {
  */
 export const crearSector = async (id, nombre, color, coordsString) => {
   try {
-    // Parsea el string del formulario al formato de array de objetos
     const coordsMapa = parseCoordenadasString(coordsString);
 
-    if (coordsMapa.length < 4) { // 3 puntos + cierre
+    if (coordsMapa.length < 4) { 
       throw new Error("Se necesitan al menos 3 pares de coordenadas (lng, lat) para formar un polígono.");
     }
     
-    // Usamos setDoc para poner un ID personalizado (ej: 'sector_a')
     const sectorRef = doc(db, "sectores", id);
     await setDoc(sectorRef, {
       id: id,
       nombre: nombre,
       color: color,
-      coordsMapa: coordsMapa // <-- Guarda el formato simple
+      coordsMapa: coordsMapa 
     });
 
     return { success: true };
@@ -70,10 +68,39 @@ export const crearSector = async (id, nombre, color, coordsString) => {
   }
 };
 
+/**
+ * Actualiza el nombre y color de un sector.
+ */
+export const updateSectorDetails = async (sectorId, nombre, color) => {
+  try {
+    const sectorRef = doc(db, "sectores", sectorId);
+    await updateDoc(sectorRef, {
+      nombre: nombre,
+      color: color,
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error al actualizar detalles del sector: ", error);
+    throw new Error(error.message || "No se pudo actualizar el sector.");
+  }
+};
+
+/**
+ * Elimina un sector.
+ */
+export const deleteSector = async (sectorId) => {
+  try {
+    await deleteDoc(doc(db, "sectores", sectorId));
+    return { success: true };
+  } catch (error) {
+    console.error("Error al eliminar sector: ", error);
+    throw new Error(error.message || "No se pudo eliminar el sector.");
+  }
+};
+
 
 /**
  * Obtiene todos los documentos de la colección 'sectores'.
- * (MODIFICADO: Ya no necesita convertir coordenadas)
  */
 export const fetchSectores = async () => {
   try {
@@ -83,7 +110,6 @@ export const fetchSectores = async () => {
       return {
         id: doc.id,
         ...data,
-        // 'coordsMapa' ya está en el formato correcto
       };
     });
     return sectoresData;
@@ -95,19 +121,15 @@ export const fetchSectores = async () => {
 
 /**
  * Actualiza la forma de un polígono (sus coordenadas) en Firestore.
- * (MODIFICADO: Guarda directamente el nuevo formato)
  */
 export const updateSectorCoordenadas = async (sectorId, nuevasCoordenadas) => {
   try {
     const sectorRef = doc(db, "sectores", sectorId);
     
-    // El polígono de 'react-native-maps' ya está en el formato correcto
-    // [{ latitude: Y, longitude: X }]
-    // Solo necesitamos asegurarnos de que esté cerrado.
     if (nuevasCoordenadas.length > 0) {
         const primero = nuevasCoordenadas[0];
         const ultimo = nuevasCoordenadas[nuevasCoordenadas.length - 1];
-        if (primero.longitude !== ultimo.longitude || primero.latitude !== ultimo.latitude) {
+        if (nuevasCoordenadas.length > 1 && (primero.longitude !== ultimo.longitude || primero.latitude !== ultimo.latitude)) {
             nuevasCoordenadas.push(primero);
         }
     }
@@ -125,7 +147,6 @@ export const updateSectorCoordenadas = async (sectorId, nuevasCoordenadas) => {
 
 /**
  * Busca todos los usuarios (empleados) que pertenecen a un sectorId específico.
- * (Sin cambios)
  */
 export const getEmpleadosPorSector = async (sectorId) => {
   try {
@@ -149,20 +170,62 @@ export const getEmpleadosPorSector = async (sectorId) => {
 
 /**
  * Crea un nuevo documento en la colección 'tareas'.
- * (Sin cambios)
+ * (MODIFICADO: Acepta fechas de inicio y fin)
  */
-export const crearTarea = async (titulo, detalles, sectorId) => {
+export const crearTarea = async (titulo, detalles, sectorId, fechaInicio, fechaFin) => {
   try {
+    // Convertir strings de fecha (YYYY-MM-DD) a Timestamps
+    const inicioTimestamp = fechaInicio ? Timestamp.fromDate(new Date(fechaInicio)) : null;
+    const finTimestamp = fechaFin ? Timestamp.fromDate(new Date(fechaFin)) : null;
+    
     await addDoc(collection(db, "tareas"), {
       sectorId: sectorId,
       titulo: titulo,
       detalles: detalles,
       fechaCreacion: Timestamp.now(),
+      fechaInicio: inicioTimestamp, 
+      fechaFin: finTimestamp,     
       estado: "pendiente"
     });
     return { success: true };
   } catch (error) {
     console.error("Error al crear la tarea: ", error);
     throw new Error("No se pudo crear la tarea.");
+  }
+};
+
+/**
+ * Obtiene todas las tareas, ordenadas por fecha de inicio.
+ */
+export const fetchTareas = async () => {
+  try {
+    const q = query(
+      collection(db, "tareas"),
+      orderBy("fechaInicio", "desc")
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Error al cargar tareas: ", error);
+    throw new Error("No se pudieron cargar las tareas. Revisa los permisos de Firestore.");
+  }
+};
+
+
+/**
+ * Marca una tarea como completada.
+ */
+export const marcarTareaCompletada = async (tareaId) => {
+  try {
+    const tareaRef = doc(db, "tareas", tareaId);
+    await updateDoc(tareaRef, {
+      estado: "completada",
+      fechaCompletada: Timestamp.now(), 
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error al marcar tarea como completada: ", error);
+    throw new Error("No se pudo completar la tarea.");
   }
 };

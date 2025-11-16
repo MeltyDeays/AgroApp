@@ -18,7 +18,8 @@ const UserForm = ({ onBackToList, initialData = null }) => {
     password: '',
     cedula: initialData?.cedula || '',
     edad: initialData?.edad || '',
-    sector: initialData?.sector || '',
+    // Se elimina el campo 'sector' para el registro inicial de empleados
+    sector: initialData?.sector || (initialData?.rol === 'empleado' ? '' : 'Bodega Principal'), // Usar valor por defecto si no es empleado
     rol: initialData?.rol || 'empleado',
   });
   const [loading, setLoading] = useState(false);
@@ -41,18 +42,32 @@ const UserForm = ({ onBackToList, initialData = null }) => {
       const updateData = { ...formData };
       if (!updateData.password) delete updateData.password;
       delete updateData.email;
-      result = await updateUser(initialData.id, updateData); //
+      
+      // Si el rol es empleado, eliminamos el campo 'sector' para no guardarlo en 'usuarios'
+      if (updateData.rol === 'empleado') delete updateData.sector;
+
+      result = await updateUser(initialData.id, updateData); 
     } else {
-      result = await registerEmployee(formData); //
+      // Si el rol es empleado, el campo 'sector' no se usa para el registro inicial
+      if (formData.rol === 'empleado') {
+        const dataToRegister = { ...formData };
+        delete dataToRegister.sector; 
+        result = await registerEmployee(dataToRegister); 
+      } else {
+        result = await registerEmployee(formData); 
+      }
     }
     setLoading(false);
     if (result.success) {
-      Alert.alert("Éxito", isEditing ? "Usuario actualizado." : "Usuario registrado.");
+      Alert.alert("Éxito", isEditing ? "Usuario actualizado." : "Usuario registrado. Asigne el sector desde Gestión de Empleados si corresponde.");
       onBackToList(true);
     } else {
       Alert.alert("Error", result.error);
     }
   };
+  
+  // Condición para mostrar el campo 'Sector'
+  const isSectorRequired = formData.rol !== 'empleado' && formData.rol !== 'proveedor';
 
   return (
     <KeyboardAvoidingView 
@@ -82,12 +97,18 @@ const UserForm = ({ onBackToList, initialData = null }) => {
       </View>
       <View style={styles.inputGroup}><Text style={styles.label}>Edad</Text>
         <TextInput ref={edadRef} style={styles.input} keyboardType="numeric" onChangeText={(v) => handleChange('edad', v)} value={formData.edad} 
-          returnKeyType="next" onSubmitEditing={() => sectorRef.current?.focus()} blurOnSubmit={false} />
+          returnKeyType="next" onSubmitEditing={() => (isSectorRequired ? sectorRef.current?.focus() : emailRef.current?.focus())} blurOnSubmit={false} />
       </View>
-      <View style={styles.inputGroup}><Text style={styles.label}>Sector de Trabajo</Text>
-        <TextInput ref={sectorRef} style={styles.input} onChangeText={(v) => handleChange('sector', v)} value={formData.sector} 
-          returnKeyType="next" onSubmitEditing={() => emailRef.current?.focus()} blurOnSubmit={false} />
-      </View>
+      
+      {/* Campo de Sector solo si NO es Empleado/Proveedor */}
+      {isSectorRequired && (
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Sector/Ubicación Principal</Text>
+          <TextInput ref={sectorRef} style={styles.input} onChangeText={(v) => handleChange('sector', v)} value={formData.sector} 
+            returnKeyType="next" onSubmitEditing={() => emailRef.current?.focus()} blurOnSubmit={false} />
+        </View>
+      )}
+
       <View style={styles.inputGroup}><Text style={styles.label}>Correo Electrónico</Text>
         <TextInput 
           ref={emailRef} 
@@ -115,7 +136,6 @@ const UserForm = ({ onBackToList, initialData = null }) => {
         />
       </View>
       
-      {/* --- (INICIO DE MODIFICACIÓN) --- */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Rol de Usuario</Text>
         <View style={styles.pickerContainer}>
@@ -125,12 +145,11 @@ const UserForm = ({ onBackToList, initialData = null }) => {
             <Picker.Item label="Socio" value="socio" />
             <Picker.Item label="Maquinaria" value="maquinaria" />
             <Picker.Item label="Administrador" value="admin" />
-            <Picker.Item label="Proveedor" value="proveedor" /> {/* <-- AÑADIDO */}
+            <Picker.Item label="Proveedor" value="proveedor" /> 
           </Picker>
           <View style={styles.pickerIconContainer}><ChevronDown size={20} color="#6B7280" /></View>
         </View>
       </View>
-      {/* --- (FIN DE MODIFICACIÓN) --- */}
 
       <TouchableOpacity style={styles.registerButton} onPress={handleSubmit} disabled={loading}>
         {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.registerButtonText}>{isEditing ? "Guardar Cambios" : "Registrar Usuario"}</Text>}
@@ -140,7 +159,8 @@ const UserForm = ({ onBackToList, initialData = null }) => {
   );
 };
 
-// --- Lista de Usuarios ---
+// ... (El componente UserList se mantiene igual para la gestión de usuarios NO-empleados)
+
 const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
   const [userList, setUserList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -151,7 +171,7 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    try { const users = await getAllUsers(); setUserList(users); } //
+    try { const users = await getAllUsers(); setUserList(users); } 
     catch (error) { Alert.alert("Error", "No se pudo cargar la lista."); }
     finally { setLoading(false); }
   };
@@ -176,7 +196,6 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
   const renderUserItem = ({ item }) => {
     const isExpanded = expandedUserId === item.id;
     
-    // --- (INICIO DE MODIFICACIÓN) ---
     const getRoleStyle = (rol) => {
       switch (rol) {
         case 'admin': return styles.roleAdmin;
@@ -184,40 +203,35 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
         case 'bodeguero': return styles.roleBodeguero;
         case 'socio': return styles.roleSocio;
         case 'maquinaria': return styles.roleMaquinaria;
-        case 'proveedor': return styles.roleProveedor; // <-- AÑADIDO
+        case 'proveedor': return styles.roleProveedor; 
         default: return styles.roleEmpleado;
       }
     };
-    // --- (FIN DE MODIFICACIÓN) ---
 
     const roleName = item.rol ? item.rol.charAt(0).toUpperCase() + item.rol.slice(1) : 'N/A';
     const toggleExpansion = () => setExpandedUserId(isExpanded ? null : item.id);
     
     const handleDelete = () => {
-      Alert.alert( "Confirmar Eliminación", `¿Eliminar a ${item.nombres}?`, //
+      Alert.alert( "Confirmar Eliminación", `¿Eliminar a ${item.nombres}?`, 
         [ { text: "Cancelar" },
           { 
             text: "Eliminar", 
             style: "destructive", 
             onPress: async () => {
               try {
-                // Se intenta eliminar
-                const result = await deleteUser(item.id); //
+                const result = await deleteUser(item.id); 
                 
                 if (result.success) {
                   Alert.alert("Éxito", "Usuario eliminado.");
-                  fetchUsers(); //
+                  fetchUsers(); 
                 } else {
-                  // Muestra el error que viene del servicio (ej: "ID es requerido")
-                  Alert.alert("Error", result.error); //
+                  Alert.alert("Error", result.error); 
                 }
               } catch (error) {
-                // Si la función falla por otra razón (ej: no está importada)
                 console.error("Error fatal al eliminar (GestionUsuarios):", error);
                 Alert.alert("Error Inesperado", "No se pudo ejecutar la acción. Revise la consola.");
               } finally {
-                // Se cierra el menú de opciones pase lo que pase
-                setExpandedUserId(null); //
+                setExpandedUserId(null); 
               }
             }
           }
@@ -243,7 +257,9 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
             {isExpanded && (
                 <View style={styles.expandedDetailsContainer}>
                     <View style={styles.detailRow}><Text style={styles.detailLabel}>Edad:</Text><Text style={styles.detailValue}>{item.edad}</Text></View>
-                    <View style={styles.detailRow}><Text style={styles.detailLabel}>Sector:</Text><Text style={styles.detailValue}>{item.sector}</Text></View>
+                    {item.rol !== 'empleado' && item.rol !== 'proveedor' && (
+                        <View style={styles.detailRow}><Text style={styles.detailLabel}>Sector:</Text><Text style={styles.detailValue}>{item.sector}</Text></View>
+                    )}
                     <View style={styles.detailRow}><Text style={styles.detailLabel}>Creado:</Text><Text style={styles.detailValue}>{item.fechaCreacion?.toDate ? item.fechaCreacion.toDate().toLocaleDateString('es-ES') : 'N/A'}</Text></View>
                     <View style={styles.expandedActionsContainer}>
                     <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={handleDelete}>
@@ -281,7 +297,6 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
         />
       </View>
 
-      {/* --- (INICIO DE MODIFICACIÓN) --- */}
       <View style={styles.filterBar}>
         <View style={styles.filterGroup}>
           <Text style={styles.label}>Filtrar por Rol:</Text>
@@ -293,12 +308,11 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
               <Picker.Item label="Socio" value="socio" />
               <Picker.Item label="Maquinaria" value="maquinaria" />
               <Picker.Item label="Administrador" value="admin" />
-              <Picker.Item label="Proveedor" value="proveedor" /> {/* <-- AÑADIDO */}
+              <Picker.Item label="Proveedor" value="proveedor" /> 
             </Picker>
             <View style={styles.pickerIconContainer}><ChevronDown size={20} color="#6B7280" /></View>
           </View>
         </View>
-      {/* --- (FIN DE MODIFICACIÓN) --- */}
 
         <View style={styles.filterGroup}>
           <Text style={styles.label}>Ordenar A-Z:</Text>
@@ -320,7 +334,7 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
 
 // --- Componente Principal del Módulo de Usuarios ---
 export default function GestionUsuarios() {
-  const [viewMode, setViewMode] = useState('list'); // 'list', 'add', 'edit'
+  const [viewMode, setViewMode] = useState('list'); 
   const [refreshKey, setRefreshKey] = useState(0);
   const [editingUser, setEditingUser] = useState(null);
 

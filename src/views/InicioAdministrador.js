@@ -3,15 +3,15 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, useWindowDimensions, SafeAreaView, ScrollView, Animated, Pressable, Alert
 } from 'react-native';
-// --- (INICIO DE MODIFICACIÓN) ---
-import { LogOut, Menu, X, LayoutDashboard, Users, Package, Clock, Truck, ShoppingCart, Tractor, Map, MapPin } from 'lucide-react-native'; // <-- Añadido 'Map' y 'MapPin'
-// --- (FIN DE MODIFICACIÓN) ---
+import { LogOut, Menu, X, LayoutDashboard, Users, Package, Clock, Truck, ShoppingCart, Tractor, Map, MapPin } from 'lucide-react-native'; 
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig'; 
 import styles from '../styles/adminStyles'; 
 
 // --- Importar Módulos y Campana ---
 import GestionUsuarios from './admin_modules/GestionUsuarios';
+// --- NUEVA IMPORTACIÓN ---
+import GestionEmpleados from './admin_modules/GestionEmpleados'; 
 import GestionProveedores from './admin_modules/GestionProveedores';
 import GestionCompras from './admin_modules/GestionCompras';
 import Dashboard from './admin_modules/Dashboard'; 
@@ -19,33 +19,40 @@ import Productos from './admin_modules/Productos';
 import { VistaAsistencia } from './RegistroAsistencia'; 
 import GestionMaquinaria from './admin_modules/GestionMaquinaria';
 import NotificationBellAdmin from '../components/NotificationBellAdmin'; 
-import MapaFinca from './admin_modules/MapaFinca'; // <-- El nombre de tu archivo de mapa
-// --- (INICIO DE MODIFICACIÓN) ---
-import GestionSectores from './admin_modules/GestionSectores'; // <-- AÑADIDO
-// --- (FIN DE MODIFICACIÓN) ---
+import MapaFinca from './admin_modules/MapaFinca'; 
+import GestionSectores from './admin_modules/GestionSectores'; 
 
 
-// --- Componente Sidebar (Modificado) ---
+// --- Componente Sidebar (Modificado para incluir GestionEmpleados) ---
 const AppSidebar = ({ activeModule, setActiveModule, onComprasClick, navigation }) => { 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, action: () => setActiveModule('dashboard') },
     { id: 'usuarios', label: 'Usuarios', icon: Users, action: () => setActiveModule('usuarios') },
+    // --- Nuevo Módulo de Empleados ---
+    { id: 'empleados', label: 'Empleados', icon: Users, action: () => setActiveModule('empleados') }, 
+    // ---------------------------------
     { id: 'productos', label: 'Productos', icon: Package, action: () => setActiveModule('productos') },
     { id: 'asistencia', label: 'Asistencia', icon: Clock, action: () => setActiveModule('asistencia') },
     { id: 'proveedores', label: 'Proveedores', icon: Truck, action: () => setActiveModule('proveedores') },
     { id: 'compras', label: 'Compras', icon: ShoppingCart, action: onComprasClick },
     { id: 'maquinaria', label: 'Maquinaria', icon: Tractor, action: () => setActiveModule('maquinaria') },
-    // --- (INICIO DE MODIFICACIÓN) ---
-    { id: 'sectores', label: 'Gestionar Sectores', icon: MapPin, action: () => setActiveModule('sectores') }, // <-- AÑADIDO
+    { id: 'sectores', label: 'Gestionar Sectores', icon: MapPin, action: () => setActiveModule('sectores') }, 
     { id: 'mapa', label: 'Ver Mapa Finca', icon: Map, action: () => navigation.navigate('MapaFinca') },
-    // --- (FIN DE MODIFICACIÓN) ---
   ];
+  
+  // Reutilizamos el icono de Usuarios para Empleados, pero debería ser diferente si desea claridad.
+  // Para este ejemplo, lo dejé en Users para ambos. Si desea un ícono diferente, cámbielo.
+  const getIcon = (id, Icon) => {
+    if (id === 'empleados') return <Users color={activeModule === id ? '#2563eb' : '#4b5563'} size={20} />;
+    return <Icon color={activeModule === id ? '#2563eb' : '#4b5563'} size={20} />;
+  };
+
   return (
     <View style={styles.sidebarContainer}>
       <Text style={styles.sidebarTitle}>Menú</Text>
       {menuItems.map(({ id, label, icon: Icon, action }) => (
         <TouchableOpacity key={id} onPress={action} style={[styles.sidebarItemWrapper, activeModule === id && styles.sidebarItemWrapperActive]}>
-          <Icon color={activeModule === id ? '#2563eb' : '#4b5563'} size={20} />
+          {getIcon(id, Icon)}
           <Text style={[styles.sidebarItem, activeModule === id && styles.sidebarItemActive]}>{label}</Text>
         </TouchableOpacity>
       ))}
@@ -91,8 +98,12 @@ export default function InicioAdministrador({ navigation }) {
   // --- renderModule ACTUALIZADO ---
   const renderModule = () => {
     switch (activeModule) {
+      case 'dashboard':
+        return <ScrollView contentContainerStyle={{ flexGrow: 1 }}><Dashboard /></ScrollView>;
       case 'usuarios':
         return <GestionUsuarios />;
+      case 'empleados': // <-- Nuevo módulo
+        return <GestionEmpleados />;
       case 'productos':
         return <ScrollView contentContainerStyle={{ flexGrow: 1 }}><Productos /></ScrollView>;
       case 'asistencia':
@@ -103,12 +114,8 @@ export default function InicioAdministrador({ navigation }) {
         return <GestionCompras user={user} initialProveedor={pedidoProveedor} />;
       case 'maquinaria':
         return <GestionMaquinaria ref={maquinariaRef} />;
-      // --- (INICIO DE MODIFICACIÓN) ---
-      case 'sectores': // <-- AÑADIDO
+      case 'sectores': 
         return <GestionSectores />;
-      // El mapa ya no se renderiza aquí, se navega a él.
-      // --- (FIN DE MODIFICACIÓN) ---
-      case 'dashboard':
       default:
         return <ScrollView contentContainerStyle={{ flexGrow: 1 }}><Dashboard /></ScrollView>;
     }
@@ -129,8 +136,6 @@ export default function InicioAdministrador({ navigation }) {
     <AppSidebar
       activeModule={activeModule}
       setActiveModule={(module) => {
-        // Los módulos que navegan (mapa) son manejados por su 'action'
-        // Los que cambian la vista principal usan 'setActiveModule'
         if (module !== 'mapa') {
           setPedidoProveedor(null); 
           setActiveModule(module);
@@ -140,9 +145,9 @@ export default function InicioAdministrador({ navigation }) {
       onComprasClick={() => {
         handleComprasClick();
       }}
-      navigation={navigation} // <-- Pasar 'navigation' al Sidebar
+      navigation={navigation} 
     />
-  ), [activeModule, isLargeScreen, navigation]); // <-- Añadido 'navigation'
+  ), [activeModule, isLargeScreen, navigation]); 
 
   return (
     <SafeAreaView style={styles.screen}>
