@@ -1,4 +1,3 @@
-
 import React, { 
   useState, 
   useEffect, 
@@ -21,11 +20,16 @@ import {
   ScrollView 
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Polygon, Marker, Callout } from 'react-native-maps'; 
-import { ArrowLeft, Edit, Check, X, Users, ClipboardList, Calendar } from 'lucide-react-native'; 
+import { ArrowLeft, Edit, Check, X, Users, ClipboardList, Calendar, ChevronDown } from 'lucide-react-native'; 
 import styles from '../../styles/mapaStyles'; 
 import { useUsers } from '../../context/UserContext';
 import * as mapaService from '../../services/mapaService'; 
+import * as almacenService from '../../services/almacenService';
+import { Picker } from '@react-native-picker/picker'; 
+import almacenStyles from '../../styles/almacenStyles'; 
 import DateTimePicker from "@react-native-community/datetimepicker";
+
+import { CompletarTareaModal } from './GestionSectores';
 
 
 const regionInicialFinca = {
@@ -34,10 +38,6 @@ const regionInicialFinca = {
   latitudeDelta: 0.015,
   longitudeDelta: 0.015,
 };
-
-
-
-
 
 
 const SectorActionModal = ({ 
@@ -247,10 +247,14 @@ const TareaModal = ({ visible, sector, onClose }) => {
 };
 
 
-
 const TareasActualesModal = ({ visible, onClose, sectores }) => {
   const [loading, setLoading] = useState(true);
   const [tareas, setTareas] = useState([]);
+  
+  
+  const [almacenes, setAlmacenes] = useState([]);
+  const [completarModalVisible, setCompletarModalVisible] = useState(false);
+  const [tareaParaCompletar, setTareaParaCompletar] = useState(null);
 
   const cargarTareas = async () => {
     setLoading(true);
@@ -258,7 +262,7 @@ const TareasActualesModal = ({ visible, onClose, sectores }) => {
       const tareasData = await mapaService.fetchTareas();
       setTareas(tareasData);
     } catch (err) {
-      Alert.alert("Error de Acceso", "No se pudieron cargar las tareas. Asegúrese de que el Administrador tenga permisos de 'lectura' en la colección 'tareas' de Firestore.");
+      Alert.alert("Error de Acceso", "No se pudieron cargar las tareas.");
       setTareas([]);
     } finally {
       setLoading(false);
@@ -268,29 +272,33 @@ const TareasActualesModal = ({ visible, onClose, sectores }) => {
   useEffect(() => {
     if (visible) {
       cargarTareas();
+      
+      const unsubAlmacenes = almacenService.streamAlmacenes((data) => {
+        setAlmacenes(data);
+      });
+      return () => unsubAlmacenes(); 
     }
   }, [visible]);
 
+  
   const handleMarcarCompletada = (tarea) => {
-    Alert.alert(
-      "Confirmar Tarea",
-      `¿Marcar la tarea "${tarea.titulo}" como completada?`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Completar",
-          onPress: async () => {
-            try {
-              await mapaService.marcarTareaCompletada(tarea.id);
-              Alert.alert("Éxito", "Tarea marcada como completada.");
-              cargarTareas(); 
-            } catch (error) {
-              Alert.alert("Error", error.message);
-            }
-          },
-        },
-      ]
-    );
+    if (almacenes.length === 0) {
+        Alert.alert("Error", "No se han cargado almacenes. No se puede registrar la cosecha.");
+        return;
+    }
+    setTareaParaCompletar(tarea);
+    setCompletarModalVisible(true);
+  };
+
+  
+  const handleSaveCosecha = async (tarea, cantidad, unidad, almacenId) => {
+      try {
+        await mapaService.marcarTareaCompletada(tarea, cantidad, unidad, almacenId);
+        Alert.alert("Éxito", "Tarea completada y cosecha registrada en el almacén.");
+        cargarTareas(); 
+      } catch (error) {
+        throw error; 
+      }
   };
 
   const formatFecha = (timestamp) => {
@@ -310,6 +318,12 @@ const TareasActualesModal = ({ visible, onClose, sectores }) => {
         <Text style={styles.taskDetail}>Sector: {sector?.nombre || item.sectorId}</Text>
         <Text style={styles.taskDetail}>Detalles: {item.detalles}</Text>
         <Text style={styles.taskDetail}>Período: {fechaInicio} al {fechaFin}</Text>
+        {/* Mostrar cosecha si está completada */}
+        {isCompleted && (
+          <Text style={[styles.taskDetail, {color: '#059669', fontWeight: 'bold'}]}>
+            Cosecha: {item.cantidadCultivadaKg ? `${item.cantidadCultivadaKg.toFixed(0)} kg` : 'N/A'}
+          </Text>
+        )}
         <Text style={[styles.taskStatus, isCompleted && {color: '#6B7280'}]}>
           Estado: {isCompleted ? 'Completada' : 'Pendiente'}
         </Text>
@@ -317,7 +331,7 @@ const TareasActualesModal = ({ visible, onClose, sectores }) => {
           <View style={styles.taskActionRow}>
             <TouchableOpacity 
               style={styles.buttonCompleteTask} 
-              onPress={() => handleMarcarCompletada(item)}
+              onPress={() => handleMarcarCompletada(item)} 
             >
               <Check size={16} color="#FFFFFF" />
               <Text style={styles.buttonCompleteText}>Marcar Completado</Text>
@@ -329,34 +343,42 @@ const TareasActualesModal = ({ visible, onClose, sectores }) => {
   };
 
   return (
-    <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <ClipboardList size={24} color="#1F2937" style={{ alignSelf: 'center', marginBottom: 12 }} />
-          <Text style={styles.modalTitle}>Tareas ({tareas.filter(t => t.estado === 'pendiente').length} Pendientes)</Text>
-          
-          {loading ? (
-            <ActivityIndicator size="large" color="#10B981" />
-          ) : (
-            <FlatList
-              data={tareas}
-              keyExtractor={(item) => item.id}
-              renderItem={renderItem}
-              contentContainerStyle={{paddingVertical: 10}}
-              ListEmptyComponent={<Text style={styles.emptyListText}>No hay tareas registradas.</Text>}
-            />
-          )}
-          <TouchableOpacity style={[styles.modalButtonClose, {marginTop: 16}]} onPress={onClose}>
-            <Text style={styles.modalButtonText}>Cerrar</Text>
-          </TouchableOpacity>
+    <>
+      <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onClose}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ClipboardList size={24} color="#1F2937" style={{ alignSelf: 'center', marginBottom: 12 }} />
+            <Text style={styles.modalTitle}>Tareas ({tareas.filter(t => t.estado === 'pendiente').length} Pendientes)</Text>
+            
+            {loading ? (
+              <ActivityIndicator size="large" color="#10B981" />
+            ) : (
+              <FlatList
+                data={tareas}
+                keyExtractor={(item) => item.id}
+                renderItem={renderItem}
+                contentContainerStyle={{paddingVertical: 10}}
+                ListEmptyComponent={<Text style={styles.emptyListText}>No hay tareas registradas.</Text>}
+              />
+            )}
+            <TouchableOpacity style={[styles.modalButtonClose, {marginTop: 16}]} onPress={onClose}>
+              <Text style={styles.modalButtonText}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+
+      {/* Renderizar el modal importado */}
+      <CompletarTareaModal
+        visible={completarModalVisible}
+        onClose={() => setCompletarModalVisible(false)}
+        tarea={tareaParaCompletar}
+        almacenes={almacenes}
+        onSave={handleSaveCosecha}
+      />
+    </>
   );
 };
-
-
-
 
 
 const editorInitialState = {
@@ -368,7 +390,6 @@ const editorInitialState = {
 function mapEditorReducer(state, action) {
   switch (action.type) {
     case 'START_EDITING':
-      
       return {
         status: 'editing_vertices',
         editingSectorId: action.payload.sectorId,
@@ -376,7 +397,6 @@ function mapEditorReducer(state, action) {
       };
       
     case 'UPDATE_VERTEX':
-      
       const { index, coordinate } = action.payload;
       const newDraftCoords = state.draftCoordinates.map((coord, i) =>
         i === index ? coordinate : coord
@@ -385,7 +405,6 @@ function mapEditorReducer(state, action) {
       
     case 'CANCEL_EDITING':
     case 'FINISH_EDITING':
-      
       return { ...editorInitialState };
       
     default:
@@ -397,14 +416,8 @@ function mapEditorReducer(state, action) {
 export default function MapaFinca({ navigation }) {
   const [sectores, setSectores] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  
-  
   const [editorState, dispatch] = useReducer(mapEditorReducer, editorInitialState);
-
-  
   const [isGestureLocked, setIsGestureLocked] = useState(false);
-  
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [modalEmpleadosVisible, setModalEmpleadosVisible] = useState(false);
   const [modalTareaVisible, setModalTareaVisible] = useState(false);
@@ -433,17 +446,10 @@ export default function MapaFinca({ navigation }) {
   }, []);
 
   const onSectorPress = (sector) => {
-    
     if (editorState.status !== 'idle') return;
-    
     setSectorSeleccionado(sector); 
     setActionModalVisible(true); 
   };
-
-  
-  
-
-  
 
   const handleSave = () => {
     if (editorState.status !== 'editing_vertices' || !editorState.editingSectorId) return;
@@ -455,12 +461,10 @@ export default function MapaFinca({ navigation }) {
         { text: "Cancelar", style: "cancel" },
         { text: "Guardar", onPress: async () => {
           try {
-            
             await mapaService.updateSectorCoordenadas(
               editorState.editingSectorId, 
               editorState.draftCoordinates
             );
-            
             
             setSectores(prevSectores => prevSectores.map(s => 
               s.id === editorState.editingSectorId 
@@ -508,9 +512,6 @@ export default function MapaFinca({ navigation }) {
     setIsGestureLocked(true); 
   }, []);
 
-
-  
-  
   
   return (
     <SafeAreaView style={styles.container}>
@@ -530,10 +531,8 @@ export default function MapaFinca({ navigation }) {
         <Text style={[styles.backButtonText, {color: '#FFFFFF'}]}>Tareas Actuales</Text>
       </TouchableOpacity>
       
-      {/* --- 10. Actualizar Botones de Edición --- */}
       {editorState.status === 'editing_vertices' && (
         <>
-          {/* Botón de Cancelar (Modificado) */}
           <TouchableOpacity 
             style={[styles.backButton, {top: 170, left: 16, backgroundColor: '#EF4444'}]} 
             onPress={handleCancel} 
@@ -542,7 +541,6 @@ export default function MapaFinca({ navigation }) {
             <Text style={[styles.backButtonText, {color: '#FFFFFF'}]}>Cancelar Edición</Text>
           </TouchableOpacity>
           
-          {/* Botón de Guardar (Nuevo) */}
           <TouchableOpacity 
             style={[styles.backButton, {top: 230, left: 16, backgroundColor: '#4CAF50'}]} 
             onPress={handleSave} 
@@ -562,19 +560,14 @@ export default function MapaFinca({ navigation }) {
           provider={PROVIDER_GOOGLE}
           mapType="satellite"
           initialRegion={regionInicialFinca}
-          
           scrollEnabled={!isGestureLocked}
           zoomEnabled={!isGestureLocked}
           rotateEnabled={!isGestureLocked}
           pitchEnabled={!isGestureLocked}
         >
-          {/* --- 12. Nueva Lógica de Renderizado --- */}
-          
-          {/* 1. Renderizar todos los polígonos */}
           {sectores.map((sector) => {
             const isBeingEdited = editorState.status === 'editing_vertices' && 
                                   editorState.editingSectorId === sector.id;
-            
             
             const displayCoordinates = isBeingEdited 
               ? editorState.draftCoordinates 
@@ -584,14 +577,12 @@ export default function MapaFinca({ navigation }) {
               <Polygon
                 key={sector.id}
                 coordinates={displayCoordinates}
-                
                 fillColor={isBeingEdited 
                   ? "rgba(255, 200, 0, 0.5)" 
                   : (sector.color || "#FF0000") + "80"
                 }
                 strokeColor={isBeingEdited ? "#FFA500" : "#FFFFFF"}
                 strokeWidth={2}
-                
                 tappable={editorState.status === 'idle'}
                 onPress={editorState.status === 'idle' 
                   ? () => onSectorPress(sector) 
@@ -601,7 +592,6 @@ export default function MapaFinca({ navigation }) {
             );
           })}
 
-          {/* 2. Renderizar Vértices (Markers) SÓLO para el polígono activo */}
           {editorState.status === 'editing_vertices' && 
             editorState.draftCoordinates.map((coord, index) => (
               <Marker
@@ -610,16 +600,13 @@ export default function MapaFinca({ navigation }) {
                 draggable
                 onDragStart={handleDragStart}
                 onDragEnd={(e) => handleVertexDragEnd(e, index)}
-                
                 pinColor="#FFA500" 
-                
               />
             ))}
             
         </MapView>
       )}
 
-      {/* --- MODAL DE ACCIONES (Actualizado) --- */}
       <SectorActionModal
         visible={actionModalVisible}
         sector={sectorSeleccionado}
@@ -635,10 +622,8 @@ export default function MapaFinca({ navigation }) {
           setActionModalVisible(false);
           setModalTareaVisible(true);
         }}
-        
         onModificarSector={() => {
           setActionModalVisible(false);
-          
           dispatch({ 
             type: 'START_EDITING', 
             payload: { 
@@ -646,11 +631,9 @@ export default function MapaFinca({ navigation }) {
               initialCoordinates: sectorSeleccionado.coordsMapa 
             } 
           });
-          
         }}
       />
       
-      {/* Modales de Empleados y Tareas (Sin cambios) */}
       {sectorSeleccionado && (
         <>
           <EmpleadosModal
@@ -672,7 +655,6 @@ export default function MapaFinca({ navigation }) {
         </>
       )}
       
-      {/* Modal de Tareas Actuales (Sin cambios) */}
       <TareasActualesModal
         visible={modalTareasActualesVisible}
         onClose={() => setModalTareasActualesVisible(false)}

@@ -2,15 +2,14 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, useWindowDimensions, SafeAreaView, ScrollView, Animated, Pressable, Alert
 } from 'react-native';
-
 import { LogOut, Menu, X, LayoutDashboard, Users, Package, Clock, Truck, ShoppingCart, Tractor, Map, MapPin, Archive } from 'lucide-react-native'; 
-
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig'; 
 import styles from '../styles/adminStyles'; 
 
 
 import GestionUsuarios from './admin_modules/GestionUsuarios';
+
 import GestionEmpleados from './admin_modules/GestionEmpleados'; 
 import GestionProveedores from './admin_modules/GestionProveedores';
 import GestionCompras from './admin_modules/GestionCompras';
@@ -21,7 +20,6 @@ import GestionMaquinaria from './admin_modules/GestionMaquinaria';
 import NotificationBellAdmin from '../components/NotificationBellAdmin'; 
 import MapaFinca from './admin_modules/MapaFinca'; 
 import GestionSectores from './admin_modules/GestionSectores'; 
-
 import GestionAlmacenes from './admin_modules/GestionAlmacenes'; 
 
 
@@ -30,11 +28,11 @@ const AppSidebar = ({ activeModule, setActiveModule, onComprasClick, navigation 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, action: () => setActiveModule('dashboard') },
     { id: 'usuarios', label: 'Usuarios', icon: Users, action: () => setActiveModule('usuarios') },
+    
     { id: 'empleados', label: 'Empleados', icon: Users, action: () => setActiveModule('empleados') }, 
+    
     { id: 'productos', label: 'Productos', icon: Package, action: () => setActiveModule('productos') },
-    
     { id: 'almacenes', label: 'Almacenes', icon: Archive, action: () => setActiveModule('almacenes') }, 
-    
     { id: 'asistencia', label: 'Asistencia', icon: Clock, action: () => setActiveModule('asistencia') },
     { id: 'proveedores', label: 'Proveedores', icon: Truck, action: () => setActiveModule('proveedores') },
     { id: 'compras', label: 'Compras', icon: ShoppingCart, action: onComprasClick },
@@ -50,7 +48,6 @@ const AppSidebar = ({ activeModule, setActiveModule, onComprasClick, navigation 
     return <Icon color={activeModule === id ? '#2563eb' : '#4b5563'} size={20} />;
   };
 
-  
   return (
     <View style={styles.sidebarContainer}>
       <Text style={styles.sidebarTitle}>Menú</Text>
@@ -66,7 +63,6 @@ const AppSidebar = ({ activeModule, setActiveModule, onComprasClick, navigation 
 
 
 export default function InicioAdministrador({ navigation }) { 
-  
   const user = auth.currentUser;
   const [activeModule, setActiveModule] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -74,9 +70,9 @@ export default function InicioAdministrador({ navigation }) {
   const isLargeScreen = width >= 768;
   const sidebarAnimation = useRef(new Animated.Value(-300)).current;
   const [pedidoProveedor, setPedidoProveedor] = useState(null); 
+  
   const maquinariaRef = useRef(null);
-  
-  
+
   useEffect(() => {
     if (!isLargeScreen) {
       Animated.timing(sidebarAnimation, { toValue: sidebarOpen ? 0 : -300, duration: 300, useNativeDriver: true }).start();
@@ -88,7 +84,7 @@ export default function InicioAdministrador({ navigation }) {
     setActiveModule('compras');
     if (!isLargeScreen) setSidebarOpen(false); 
   };
-  
+
   const handleComprasClick = () => {
     setPedidoProveedor(null); 
     setActiveModule('compras');
@@ -99,6 +95,7 @@ export default function InicioAdministrador({ navigation }) {
     setActiveModule('maquinaria');
     if (!isLargeScreen) { setSidebarOpen(false); }
   };
+
   
   const renderModule = () => {
     switch (activeModule) {
@@ -110,10 +107,8 @@ export default function InicioAdministrador({ navigation }) {
         return <GestionEmpleados />;
       case 'productos':
         return <ScrollView contentContainerStyle={{ flexGrow: 1 }}><Productos /></ScrollView>;
-      
       case 'almacenes':
         return <GestionAlmacenes />; 
-      
       case 'asistencia':
         return <VistaAsistencia navigation={navigation} />;
       case 'proveedores':
@@ -129,7 +124,7 @@ export default function InicioAdministrador({ navigation }) {
     }
   };
   
-  
+
   const handleLogout = async () => {
     try {
       await signOut(auth);

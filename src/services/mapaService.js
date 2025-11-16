@@ -1,4 +1,3 @@
-
 import { db } from '../../firebaseConfig';
 import {
   collection,
@@ -13,12 +12,14 @@ import {
   deleteDoc, 
   orderBy,
   writeBatch, 
-  onSnapshot 
+  onSnapshot,
+  runTransaction 
 } from 'firebase/firestore';
 
-/**
- * Parsea un string de coordenadas (lng, lat) a un array de objetos.
- */
+
+import { convertirAKilos } from './almacenService';
+
+
 const parseCoordenadasString = (coordsString) => {
   const coordsMapa = [];
   const lineas = coordsString.split('\n'); 
@@ -33,7 +34,6 @@ const parseCoordenadasString = (coordsString) => {
     }
   }
   
-  
   if (coordsMapa.length > 0) {
     const primero = coordsMapa[0];
     const ultimo = coordsMapa[coordsMapa.length - 1];
@@ -44,9 +44,7 @@ const parseCoordenadasString = (coordsString) => {
   return coordsMapa;
 };
 
-/**
- * (¡NUEVO!) Crea un nuevo sector en Firestore desde el formulario.
- */
+
 export const crearSector = async (id, nombre, color, coordsString) => {
   try {
     const coordsMapa = parseCoordenadasString(coordsString);
@@ -72,9 +70,7 @@ export const crearSector = async (id, nombre, color, coordsString) => {
   }
 };
 
-/**
- * Actualiza el nombre y color de un sector.
- */
+
 export const updateSectorDetails = async (sectorId, nombre, color) => {
   try {
     const sectorRef = doc(db, "sectores", sectorId);
@@ -89,9 +85,7 @@ export const updateSectorDetails = async (sectorId, nombre, color) => {
   }
 };
 
-/**
- * Elimina un sector.
- */
+
 export const deleteSector = async (sectorId) => {
   try {
     
@@ -104,9 +98,7 @@ export const deleteSector = async (sectorId) => {
 };
 
 
-/**
- * Obtiene todos los documentos de la colección 'sectores'.
- */
+
 export const fetchSectores = async () => {
   try {
     const querySnapshot = await getDocs(collection(db, "sectores"));
@@ -124,9 +116,7 @@ export const fetchSectores = async () => {
   }
 };
 
-/**
- * Actualiza la forma de un polígono (sus coordenadas) en Firestore.
- */
+
 export const updateSectorCoordenadas = async (sectorId, nuevasCoordenadas) => {
   try {
     const sectorRef = doc(db, "sectores", sectorId);
@@ -150,9 +140,7 @@ export const updateSectorCoordenadas = async (sectorId, nuevasCoordenadas) => {
   }
 };
 
-/**
- * Busca todos los usuarios (empleados) que pertenecen a un sectorId específico.
- */
+
 export const getEmpleadosPorSector = async (sectorId) => {
   try {
     const q = query(
@@ -173,10 +161,7 @@ export const getEmpleadosPorSector = async (sectorId) => {
   }
 };
 
-/**
- * Crea un nuevo documento en la colección 'tareas'.
- * (MODIFICADO: Acepta fechas de inicio y fin)
- */
+
 export const crearTarea = async (titulo, detalles, sectorId, fechaInicio, fechaFin) => {
   try {
     
@@ -199,9 +184,7 @@ export const crearTarea = async (titulo, detalles, sectorId, fechaInicio, fechaF
   }
 };
 
-/**
- * Obtiene todas las tareas, ordenadas por fecha de inicio.
- */
+
 export const fetchTareas = async () => {
   try {
     const q = query(
@@ -218,29 +201,69 @@ export const fetchTareas = async () => {
 };
 
 
+
 /**
- * Marca una tarea como completada.
+ * Marca una tarea como completada y AÑADE el inventario a un almacén.
+ * @param {object} tarea - El objeto de la tarea a completar.
+ * @param {string} cantidad - La cantidad de materia (ej: "500").
+ * @param {string} unidad - La unidad (ej: "kilos", "libras", "toneladas").
+ * @param {string} almacenId - El ID del almacén de destino.
  */
-export const marcarTareaCompletada = async (tareaId) => {
+export const marcarTareaCompletada = async (tarea, cantidad, unidad, almacenId) => {
+  const cantidadNum = parseFloat(cantidad);
+  if (isNaN(cantidadNum) || cantidadNum <= 0) {
+    throw new Error("La cantidad debe ser un número positivo.");
+  }
+
+  const cantidadEnKilos = convertirAKilos(cantidadNum, unidad);
+  
   try {
-    const tareaRef = doc(db, "tareas", tareaId);
-    await updateDoc(tareaRef, {
-      estado: "completada",
-      fechaCompletada: Timestamp.now(), 
+    
+    await runTransaction(db, async (transaction) => {
+      const almacenRef = doc(db, "almacenes", almacenId);
+      const tareaRef = doc(db, "tareas", tarea.id);
+
+      
+      const almacenDoc = await transaction.get(almacenRef);
+      if (!almacenDoc.exists()) {
+        throw new Error("El almacén seleccionado no existe.");
+      }
+
+      const almacenData = almacenDoc.data();
+      const nuevaCantidad = (almacenData.cantidadActual || 0) + cantidadEnKilos;
+
+      
+      if (nuevaCantidad > almacenData.capacidadMaxima) {
+        throw new Error(
+          `La capacidad del almacén (${almacenData.capacidadMaxima.toFixed(0)} kg) se superaría. \nStock actual: ${almacenData.cantidadActual.toFixed(0)} kg. \nIntentando agregar: ${cantidadEnKilos.toFixed(0)} kg.`
+        );
+      }
+
+      
+      
+      
+      transaction.update(tareaRef, {
+        estado: "completada",
+        fechaCompletada: Timestamp.now(),
+        cantidadCultivadaKg: cantidadEnKilos, 
+        almacenDestinoId: almacenId          
+      });
+
+      
+      transaction.update(almacenRef, {
+        cantidadActual: nuevaCantidad
+      });
     });
+
     return { success: true };
   } catch (error) {
-    console.error("Error al marcar tarea como completada: ", error);
-    throw new Error("No se pudo completar la tarea.");
+    console.error("Error en la transacción de completar tarea: ", error);
+    
+    throw new Error(error.message || "No se pudo completar la tarea.");
   }
 };
 
 
-
-
-/**
- * Crea una solicitud para designar a un empleado como supervisor de un sector.
- */
 export const designarSupervisor = async (sector, empleado, adminId) => {
   try {
     
@@ -278,9 +301,7 @@ export const designarSupervisor = async (sector, empleado, adminId) => {
   }
 };
 
-/**
- * (Para Empleado) Escucha las solicitudes de supervisor pendientes.
- */
+
 export const streamSupervisorRequests = (empleadoId, callback) => {
   if (!empleadoId) return () => {};
 
@@ -307,9 +328,7 @@ export const streamSupervisorRequests = (empleadoId, callback) => {
   });
 };
 
-/**
- * (Para Empleado) Responde a una solicitud de supervisor (Aceptar o Rechazar).
- */
+
 export const responderSolicitudSupervisor = async (solicitud, aceptar) => {
   const batch = writeBatch(db);
   
@@ -318,8 +337,6 @@ export const responderSolicitudSupervisor = async (solicitud, aceptar) => {
     const requestRef = doc(db, "supervisorRequests", solicitud.id);
     
     if (aceptar) {
-      
-      
       
       const sectorRef = doc(db, "sectores", solicitud.sectorId);
       batch.update(sectorRef, {
