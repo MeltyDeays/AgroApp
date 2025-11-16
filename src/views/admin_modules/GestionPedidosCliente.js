@@ -3,7 +3,6 @@ import {
   View, Text, FlatList, ActivityIndicator, Alert, ScrollView, TouchableOpacity 
 } from 'react-native';
 import { TabView, TabBar } from "react-native-tab-view"; 
-// --- 1. Importar 'Home' para la dirección ---
 import { Check, XCircle, User, Calendar, Tag, Info, Home } from 'lucide-react-native';
 import { useUsers } from '../../context/UserContext';
 import * as pedidoClienteService from '../../services/pedidoClienteService';
@@ -38,14 +37,18 @@ const PedidosList = ({ pedidos, onApprove, onReject }) => {
       );
     };
 
+    // --- (INICIO DE MODIFICACIÓN) ---
+    // Colores de estado actualizados
     const getStatusStyle = (estado) => {
       switch (estado) {
-        case 'Pendiente': return styles.statusEnEspera;
-        case 'Aprobado': return styles.statusRecibido;
-        case 'Rechazado': return styles.statusRechazada;
+        case 'Pendiente': return styles.statusEnEspera; // Amarillo
+        case 'Aprobado': return styles.statusEnProceso; // Azul (En Camino)
+        case 'Completado': return styles.statusRecibido; // Verde
+        case 'Rechazado': return styles.statusRechazada; // Rojo
         default: return styles.roleMaquinaria;
       }
     };
+    // --- (FIN DE MODIFICACIÓN) ---
 
     return (
       <View style={styles.userItem}>
@@ -69,13 +72,10 @@ const PedidosList = ({ pedidos, onApprove, onReject }) => {
             <Tag size={16} color="#6B7280" /><Text style={styles.detailLabel}>Método Pago:</Text>
             <Text style={styles.detailValue}>{item.metodoPago} {item.paymentDetails ? `(...${item.paymentDetails.last4})` : ''}</Text>
           </View>
-
-          {/* --- 2. Mostrar la Dirección de Entrega --- */}
           <View style={styles.detailRow}>
             <Home size={16} color="#6B7280" /><Text style={styles.detailLabel}>Dirección:</Text>
             <Text style={styles.detailValue}>{item.direccionEntrega || 'No especificada'}</Text>
           </View>
-
           {item.motivoRechazo && (
             <View style={styles.detailRow}>
               <Info size={16} color="#B91C1C" /><Text style={[styles.detailLabel, {color: '#B91C1C'}]}>Motivo:</Text>
@@ -121,11 +121,14 @@ const PedidosList = ({ pedidos, onApprove, onReject }) => {
 
 export default function GestionPedidosCliente() {
   const [index, setIndex] = useState(0);
+  // --- (INICIO DE MODIFICACIÓN) ---
   const [routes] = useState([
     { key: 'pendientes', title: 'Pendientes' },
-    { key: 'aprobados', title: 'Aprobados' },
+    { key: 'aprobados', title: 'En Camino' }, // Texto cambiado
+    { key: 'completados', title: 'Completados' }, // Nuevo
     { key: 'rechazados', title: 'Rechazados' },
   ]);
+  // --- (FIN DE MODIFICACIÓN) ---
 
   const [loading, setLoading] = useState(true);
   const [allPedidos, setAllPedidos] = useState([]);
@@ -141,7 +144,6 @@ export default function GestionPedidosCliente() {
     });
 
     const unsubAlmacenes = almacenService.streamAlmacenes(setAlmacenes);
-    // --- 3. Cargar los productos ---
     const unsubProductos = productoService.streamProductos(setProductos); 
 
     return () => {
@@ -151,13 +153,16 @@ export default function GestionPedidosCliente() {
     };
   }, []);
 
-  const { pendientes, aprobados, rechazados } = useMemo(() => {
+  // --- (INICIO DE MODIFICACIÓN) ---
+  const { pendientes, aprobados, completados, rechazados } = useMemo(() => {
     return {
       pendientes: allPedidos.filter(p => p.estado === 'Pendiente'),
       aprobados: allPedidos.filter(p => p.estado === 'Aprobado'),
+      completados: allPedidos.filter(p => p.estado === 'Completado'), // Nuevo
       rechazados: allPedidos.filter(p => p.estado === 'Rechazado'),
     };
   }, [allPedidos]);
+  // --- (FIN DE MODIFICACIÓN) ---
 
   const handleApprove = async (pedido) => {
     Alert.alert(
@@ -170,7 +175,6 @@ export default function GestionPedidosCliente() {
           style: "default",
           onPress: async () => {
             try {
-              // --- 4. Pasar 'productos' a la función ---
               await pedidoClienteService.aprobarPedido(pedido, almacenes, productos);
               Alert.alert("Éxito", "Pedido aprobado y stock descontado.");
             } catch (error) {
@@ -191,6 +195,7 @@ export default function GestionPedidosCliente() {
     }
   };
 
+  // --- (INICIO DE MODIFICACIÓN) ---
   const renderScene = useCallback(({ route }) => {
     if (loading) {
       return <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }} />;
@@ -200,12 +205,15 @@ export default function GestionPedidosCliente() {
         return <PedidosList pedidos={pendientes} onApprove={handleApprove} onReject={handleReject} />;
       case 'aprobados':
         return <PedidosList pedidos={aprobados} onApprove={null} onReject={null} />;
+      case 'completados': // Nuevo
+        return <PedidosList pedidos={completados} onApprove={null} onReject={null} />;
       case 'rechazados':
         return <PedidosList pedidos={rechazados} onApprove={null} onReject={null} />;
       default:
         return null;
     }
-  }, [loading, pendientes, aprobados, rechazados, handleApprove, handleReject]); // <-- Añadir handleApprove/Reject
+  }, [loading, pendientes, aprobados, completados, rechazados, handleApprove, handleReject]);
+  // --- (FIN DE MODIFICACIÓN) ---
 
   return (
     <TabView

@@ -22,9 +22,9 @@ import GestionMaquinariaEmpleado from "./src/views/empleado_modules/GestionMaqui
 
 import InicioProveedor from "./src/views/proveedor_modules/InicioProveedor.js";
 
-// --- (INICIO DE MODIFICACIÓN) ---
 import InicioSocio from "./src/views/socio_modules/InicioSocio.js";
-// --- (FIN DE MODIFICACIÓN) ---
+// --- 1. Importar la nueva pantalla ---
+import MisPedidos from "./src/views/socio_modules/MisPedidos.js";
 
 
 import MapaFinca from "./src/views/admin_modules/MapaFinca.js";
@@ -93,8 +93,7 @@ const ProveedorStack = () => (
   </Stack.Navigator>
 );
 
-// --- (INICIO DE MODIFICACIÓN) ---
-// 5. Añadir la pila de navegación para el Socio
+// --- 2. Añadir la pantalla al Stack del Socio ---
 const SocioStack = () => (
   <Stack.Navigator>
     <Stack.Screen
@@ -102,10 +101,13 @@ const SocioStack = () => (
       component={InicioSocio}
       options={{ headerShown: false }}
     />
-    {/* Aquí podrías añadir más pantallas para el socio, como "Mis Pedidos" */}
+    <Stack.Screen
+      name="MisPedidos"
+      component={MisPedidos}
+      options={{ headerShown: false }}
+    />
   </Stack.Navigator>
 );
-// --- (FIN DE MODIFICACIÓN) ---
 
 
 export default function App() {
@@ -164,10 +166,8 @@ export default function App() {
               return <EmployeeStack />;
             case 'proveedor': 
               return <ProveedorStack />;
-            // --- (INICIO DE MODIFICACIÓN) ---
             case 'socio':
               return <SocioStack />;
-            // --- (FIN DE MODIFICACIÓN) ---
             default:
               return <AuthStack />;
           }

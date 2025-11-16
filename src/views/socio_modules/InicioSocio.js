@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View, Text, SafeAreaView, FlatList, TextInput, TouchableOpacity, ScrollView, Image, Modal, Alert, ActivityIndicator, KeyboardAvoidingView, Platform
 } from 'react-native';
-import { LogOut, ShoppingCart, X, CreditCard, Home, Trash2, Plus, CheckCircle } from 'lucide-react-native';
+import { LogOut, ShoppingCart, X, CreditCard, Home, Trash2, Plus, CheckCircle, ClipboardCheck } from 'lucide-react-native';
 import * as SecureStore from 'expo-secure-store'; 
 import { signOut } from 'firebase/auth';
 import { auth } from '../../../firebaseConfig';
@@ -10,10 +10,11 @@ import * as productoService from '../../services/productoService';
 import * as almacenService from '../../services/almacenService';
 import * as pedidoClienteService from '../../services/pedidoClienteService';
 import styles from '../../styles/socioStyles';
-// --- 1. Importar useUsers ---
 import { useUsers } from '../../context/UserContext';
+import { useNavigation } from '@react-navigation/native';
 
-// --- Modal de Cantidad ---
+// ... (Todos los Modales: QuantityModal, AddCardModal, CartModal, CheckoutModal... van aquí SIN CAMBIOS)
+// ... (QuantityModal)
 const QuantityModal = ({ visible, onClose, producto, onConfirm }) => {
   const [cantidad, setCantidad] = useState('1'); 
   useEffect(() => {
@@ -85,15 +86,13 @@ const QuantityModal = ({ visible, onClose, producto, onConfirm }) => {
     </Modal>
   );
 };
-
-// --- Modal para Agregar Tarjeta ---
+// ... (AddCardModal)
 const AddCardModal = ({ visible, onClose, onCardSaved }) => {
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
   const [cardHolderName, setCardHolderName] = useState('');
   const [loading, setLoading] = useState(false);
-
   const handleCardNumberChange = (text) => {
     const numericText = text.replace(/[^0-9]/g, ''); 
     const formattedText = numericText
@@ -101,7 +100,6 @@ const AddCardModal = ({ visible, onClose, onCardSaved }) => {
       .trim(); 
     setCardNumber(formattedText);
   };
-
   const handleExpiryDateChange = (text) => {
     let v = text.replace(/[^0-9]/g, ''); 
     if (v.length > 2) {
@@ -112,10 +110,8 @@ const AddCardModal = ({ visible, onClose, onCardSaved }) => {
     }
     setExpiryDate(v);
   };
-
   const handleSaveCard = async () => {
     const numericCardNumber = cardNumber.replace(/\s/g, '');
-
     if (numericCardNumber.length < 15 || expiryDate.length !== 5 || cvv.length < 3 || !cardHolderName) {
       Alert.alert("Datos Inválidos", "Por favor, completa todos los campos correctamente.");
       return;
@@ -132,7 +128,6 @@ const AddCardModal = ({ visible, onClose, onCardSaved }) => {
       const existingCards = existingCardsJson ? JSON.parse(existingCardsJson) : [];
       const newCards = [...existingCards, newCard];
       await SecureStore.setItemAsync('savedCards', JSON.stringify(newCards));
-      
       setLoading(false);
       Alert.alert("¡Éxito!", "Tarjeta guardada de forma segura.");
       onCardSaved(newCards); 
@@ -147,7 +142,6 @@ const AddCardModal = ({ visible, onClose, onCardSaved }) => {
       console.error(error);
     }
   };
-
   return (
     <Modal
       visible={visible}
@@ -212,9 +206,7 @@ const AddCardModal = ({ visible, onClose, onCardSaved }) => {
     </Modal>
   );
 };
-
-
-// --- Tarjeta de Producto ---
+// ... (ProductCard)
 const ProductCard = ({ item, onAddToCart, almacenes }) => {
   const almacenOrigen = useMemo(() => {
     return almacenes.find(a => a.id === item.almacenId);
@@ -241,8 +233,7 @@ const ProductCard = ({ item, onAddToCart, almacenes }) => {
     </View>
   );
 };
-
-// --- Modal del Carrito ---
+// ... (CartModal)
 const CartModal = ({ visible, onClose, cart, onRemove, onCheckout, total }) => {
   const renderCartItem = ({ item }) => (
     <View style={styles.cartItem}>
@@ -306,16 +297,13 @@ const CartModal = ({ visible, onClose, cart, onRemove, onCheckout, total }) => {
     </Modal>
   );
 };
-
-// --- Modal de Pago (MODIFICADO) ---
+// ... (CheckoutModal)
 const CheckoutModal = ({ visible, onClose, total, onPlaceOrder, savedCards, onAddNewCard }) => {
   const [selectedPayment, setSelectedPayment] = useState(null); 
   const [loading, setLoading] = useState(false);
-  // --- 2. Nuevo estado para la dirección ---
   const [address, setAddress] = useState('');
 
   const handlePlaceOrder = async () => {
-    // --- 3. Validar la dirección ---
     if (!address) {
       Alert.alert("Error", "Por favor, ingresa una dirección de entrega.");
       return;
@@ -329,12 +317,11 @@ const CheckoutModal = ({ visible, onClose, total, onPlaceOrder, savedCards, onAd
       const paymentMethod = selectedPayment.type;
       const paymentDetails = paymentMethod === 'Tarjeta' ? { last4: selectedPayment.last4 } : null;
       
-      // --- 4. Pasar la dirección al handler ---
       await onPlaceOrder(paymentMethod, paymentDetails, address);
       
       Alert.alert("¡Pedido Realizado!", "Tu pedido ha sido enviado al administrador para su aprobación.");
       setSelectedPayment(null);
-      setAddress(''); // Limpiar dirección
+      setAddress(''); 
       onClose();
     } catch (error) {
       Alert.alert("Error", error.message);
@@ -365,11 +352,10 @@ const CheckoutModal = ({ visible, onClose, total, onPlaceOrder, savedCards, onAd
               <Text style={styles.cartTotalValue}>C$ {total.toFixed(2)}</Text>
             </View>
 
-            {/* --- 5. Campo de Dirección de Entrega --- */}
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { marginTop: 16 }]}>Dirección de Entrega</Text>
               <TextInput 
-                style={[styles.searchBar, { paddingVertical: 12 }]} // Reutilizamos el estilo de searchBar
+                style={[styles.searchBar, { paddingVertical: 12 }]} 
                 value={address} 
                 onChangeText={setAddress} 
                 placeholder="Ej: 50vrs al sur del parque, Juigalpa" 
@@ -448,12 +434,15 @@ export default function InicioSocio() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   
   const [savedCards, setSavedCards] = useState([]);
-  const [selectedCard, setSelectedCard] = useState(null); 
   const [isAddCardModalVisible, setIsAddCardModalVisible] = useState(false);
 
+  // --- (INICIO DE MODIFICACIÓN) ---
+  const [unreadPedidos, setUnreadPedidos] = useState(0); // Estado para el badge
+  // --- (FIN DE MODIFICACIÓN) ---
+
   const user = auth.currentUser;
-  // --- 6. Obtener el nombre completo del socio ---
   const { getUserFullName } = useUsers();
+  const navigation = useNavigation();
 
   useEffect(() => {
     setLoading(true);
@@ -474,11 +463,25 @@ export default function InicioSocio() {
     loadCards();
     setTimeout(() => setLoading(false), 500); 
 
+    // --- (INICIO DE MODIFICACIÓN) ---
+    // Suscribirse a las notificaciones de pedidos
+    let unsubNotis = () => {};
+    if(user) {
+      unsubNotis = pedidoClienteService.streamNuevasNotificacionesSocio(
+        user.uid, 
+        (pedidos) => {
+          setUnreadPedidos(pedidos.length); // Actualizar el contador
+        }
+      );
+    }
+    // --- (FIN DE MODIFICACIÓN) ---
+
     return () => {
       unsubProductos();
       unsubAlmacenes();
+      unsubNotis(); // Limpiar el listener de notificaciones
     };
-  }, []);
+  }, [user]);
 
   const filterCategories = useMemo(() => {
     const categories = almacenes.map(a => a.materiaPrima);
@@ -530,24 +533,21 @@ export default function InicioSocio() {
     setIsCheckoutVisible(true);
   };
 
-  // --- 7. Actualizar handlePlaceOrder ---
   const handlePlaceOrder = async (paymentMethod, paymentDetails, address) => {
     if (!user) {
       throw new Error("No se ha podido identificar al usuario.");
     }
     const itemsToSave = cart.map(({ cartId, ...item }) => item);
-    
-    // Obtener el nombre completo del socio desde el UserContext
     const socioName = getUserFullName(user.uid) || user.email;
     
     await pedidoClienteService.createPedidoCliente(
       user.uid,
-      socioName, // Usar el nombre completo
+      socioName, 
       itemsToSave,
       cartTotal,
       paymentMethod,
       paymentDetails,
-      address // Pasar la dirección
+      address 
     );
     
     setCart([]);
@@ -567,6 +567,19 @@ export default function InicioSocio() {
       <View style={styles.header}>
         <Text style={styles.title}>Catálogo</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          
+          {/* --- (INICIO DE MODIFICACIÓN) --- */}
+          {/* Botón "Mis Pedidos" con Badge */}
+          <TouchableOpacity onPress={() => navigation.navigate('MisPedidos')} style={styles.cartButton}>
+            <ClipboardCheck size={24} color="#1F2937" />
+            {unreadPedidos > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{unreadPedidos}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          {/* --- (FIN DE MODIFICACIÓN) --- */}
+
           <TouchableOpacity onPress={() => setIsCartVisible(true)} style={styles.cartButton}>
             <ShoppingCart size={24} color="#1F2937" />
             {cart.length > 0 && (

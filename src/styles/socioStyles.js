@@ -14,7 +14,9 @@ export default StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 16, 
+    paddingTop: 48,       
+    paddingBottom: 16,    
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
@@ -152,7 +154,7 @@ export default StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end', // <-- Sube desde abajo
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
@@ -196,29 +198,28 @@ export default StyleSheet.create({
     fontWeight: '600',
     color: '#1F2937',
   },
-  cartItemPackage: { // Ej: "Paquete: 50 lbs"
+  cartItemPackage: {
     fontSize: 14,
     color: '#6B7280',
   },
-  cartItemPrice: { // Ej: "C$ 1200.00 c/u"
+  cartItemPrice: {
     fontSize: 14,
     fontWeight: '500',
     color: '#1F2937',
     marginTop: 4,
   },
-  cartItemQuantity: { // Ej: "Cantidad: 5"
+  cartItemQuantity: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#2563EB',
     marginTop: 4,
   },
-  cartItemSubtotal: { // Ej: "Subtotal: C$ 6000.00"
+  cartItemSubtotal: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#10B981',
     marginTop: 8,
   },
-  
   cartTotalContainer: {
     paddingTop: 16,
     borderTopWidth: 1,
@@ -265,7 +266,6 @@ export default StyleSheet.create({
   paymentOptionsContainer: {
     marginVertical: 16,
   },
-  // Botón genérico (usado para "Pago en Físico" y "Agregar Tarjeta")
   paymentButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -285,8 +285,6 @@ export default StyleSheet.create({
     color: '#1F2937',
     marginLeft: 12,
   },
-
-  // --- (NUEVO) Lista de Tarjetas Guardadas ---
   paymentCardItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -322,11 +320,11 @@ export default StyleSheet.create({
     color: '#6B7280',
   },
   
-  // --- (NUEVO) Modal de Cantidad ---
+  // --- Modal de Cantidad ---
   quantityModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center', // <-- Centrado
+    justifyContent: 'center', 
     alignItems: 'center',
     padding: 20,
   },
@@ -415,7 +413,7 @@ export default StyleSheet.create({
     fontSize: 16,
   },
 
-  // --- (NUEVO) Formulario de Tarjeta ---
+  // --- Formulario de Tarjeta ---
   cardFormContainer: {
     width: '100%',
     backgroundColor: '#FFFFFF',
@@ -440,5 +438,136 @@ export default StyleSheet.create({
   },
   cardInputHalf: {
     flex: 1,
+  },
+  
+  // --- Estilos para Mis Pedidos ---
+  orderCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  orderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  orderId: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  orderDate: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  orderStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+  },
+  orderStatusText: {
+    marginLeft: 6,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  // --- (ESTILOS DE ESTADO ACTUALIZADOS) ---
+  statusPendiente: {
+    backgroundColor: '#FEF9C3', // Amarillo claro
+    color: '#A16207', // Amarillo oscuro
+  },
+  statusAprobado: { // Ahora es Azul (En Camino)
+    backgroundColor: '#DBEAFE', // Azul claro
+    color: '#1D4ED8', // Azul oscuro
+  },
+  statusCompletado: { // Nuevo (Verde)
+    backgroundColor: '#D1FAE5', 
+    color: '#047857', 
+  },
+  statusRechazado: {
+    backgroundColor: '#FEE2E2', // Rojo claro
+    color: '#B91C1C', // Rojo oscuro
+  },
+  // --- (FIN DE ESTILOS DE ESTADO) ---
+  orderBody: {
+    paddingVertical: 12,
+  },
+  orderItemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  orderItemName: {
+    fontSize: 14,
+    color: '#374151',
+    flex: 1,
+    marginRight: 8,
+  },
+  orderItemSubtotal: {
+    fontSize: 14,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+  orderTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  orderTotalLabel: {
+    fontSize: 16,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+  orderTotalValue: {
+    fontSize: 18,
+    color: '#1F2937',
+    fontWeight: 'bold',
+  },
+  orderReasonContainer: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  orderReasonLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#B91C1C',
+    marginBottom: 4,
+  },
+  orderReasonText: {
+    fontSize: 14,
+    color: '#B91C1C',
+    fontStyle: 'italic',
+  },
+  // --- (NUEVO) Botón Confirmar Entrega ---
+  orderConfirmButton: {
+    backgroundColor: '#D1FAE5',
+    borderColor: '#6EE7B7',
+    borderWidth: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  orderConfirmButtonText: {
+    color: '#047857',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
