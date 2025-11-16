@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, useWindowDimensions, SafeAreaView, ScrollView, Animated, Pressable, Alert
 } from 'react-native';
-// 1. Añadimos 'Archive' al import
-import { LogOut, Menu, X, LayoutDashboard, Users, Package, Clock, Truck, ShoppingCart, Tractor, Map, MapPin, Archive } from 'lucide-react-native'; 
+// --- (INICIO DE MODIFICACIÓN) ---
+import { LogOut, Menu, X, LayoutDashboard, Users, Package, Clock, Truck, ShoppingCart, Tractor, Map, MapPin, Archive, ClipboardCheck } from 'lucide-react-native'; 
+// --- (FIN DE MODIFICACIÓN) ---
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig'; 
 import styles from '../styles/adminStyles'; 
@@ -21,8 +22,10 @@ import GestionMaquinaria from './admin_modules/GestionMaquinaria';
 import NotificationBellAdmin from '../components/NotificationBellAdmin'; 
 import MapaFinca from './admin_modules/MapaFinca'; 
 import GestionSectores from './admin_modules/GestionSectores'; 
-// 2. Importamos el nuevo módulo de Almacenes
 import GestionAlmacenes from './admin_modules/GestionAlmacenes'; 
+// --- (INICIO DE MODIFICACIÓN) ---
+import GestionPedidosCliente from './admin_modules/GestionPedidosCliente'; // 1. Importar
+// --- (FIN DE MODIFICACIÓN) ---
 
 
 
@@ -30,15 +33,15 @@ const AppSidebar = ({ activeModule, setActiveModule, onComprasClick, navigation 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, action: () => setActiveModule('dashboard') },
     { id: 'usuarios', label: 'Usuarios', icon: Users, action: () => setActiveModule('usuarios') },
-    
     { id: 'empleados', label: 'Empleados', icon: Users, action: () => setActiveModule('empleados') }, 
-    
     { id: 'productos', label: 'Productos', icon: Package, action: () => setActiveModule('productos') },
-    // 3. Añadimos el módulo al menú
     { id: 'almacenes', label: 'Almacenes', icon: Archive, action: () => setActiveModule('almacenes') }, 
+    // --- (INICIO DE MODIFICACIÓN) ---
+    { id: 'pedidosSocios', label: 'Pedidos Socios', icon: ClipboardCheck, action: () => setActiveModule('pedidosSocios') }, // 2. Añadir al menú
+    // --- (FIN DE MODIFICACIÓN) ---
     { id: 'asistencia', label: 'Asistencia', icon: Clock, action: () => setActiveModule('asistencia') },
     { id: 'proveedores', label: 'Proveedores', icon: Truck, action: () => setActiveModule('proveedores') },
-    { id: 'compras', label: 'Compras', icon: ShoppingCart, action: onComprasClick },
+    { id: 'compras', label: 'Compras Proveedor', icon: ShoppingCart, action: onComprasClick },
     { id: 'maquinaria', label: 'Maquinaria', icon: Tractor, action: () => setActiveModule('maquinaria') },
     { id: 'sectores', label: 'Gestionar Sectores', icon: MapPin, action: () => setActiveModule('sectores') }, 
     { id: 'mapa', label: 'Ver Mapa Finca', icon: Map, action: () => navigation.navigate('MapaFinca') },
@@ -94,10 +97,12 @@ export default function InicioAdministrador({ navigation }) {
     if (!isLargeScreen) setSidebarOpen(false); 
   };
 
-  const handleNotificationClick = () => {
-    setActiveModule('maquinaria');
+  // --- (INICIO DE MODIFICACIÓN) ---
+  const handleNotificationClick = (moduleId = 'maquinaria') => { // 3. Aceptar un ID de módulo
+    setActiveModule(moduleId);
     if (!isLargeScreen) { setSidebarOpen(false); }
   };
+  // --- (FIN DE MODIFICACIÓN) ---
 
   
   const renderModule = () => {
@@ -108,14 +113,14 @@ export default function InicioAdministrador({ navigation }) {
         return <GestionUsuarios />;
       case 'empleados': 
         return <GestionEmpleados />;
-        
-      // --- (INICIO DE LA CORRECCIÓN) ---
       case 'productos':
-        return <Productos />; // Quitamos el <ScrollView>
-      // --- (FIN DE LA CORRECCIÓN) ---
-        
+        return <Productos />; 
       case 'almacenes':
-        return <GestionAlmacenes />;
+        return <GestionAlmacenes />; 
+      // --- (INICIO DE MODIFICACIÓN) ---
+      case 'pedidosSocios':
+        return <GestionPedidosCliente />; // 4. Añadir el case
+      // --- (FIN DE MODIFICACIÓN) ---
       case 'asistencia':
         return <VistaAsistencia navigation={navigation} />;
       case 'proveedores':

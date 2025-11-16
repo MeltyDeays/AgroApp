@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
@@ -9,9 +8,10 @@ import {
   FlatList,
   StyleSheet,
 } from "react-native";
-import { Bell, X, Clock, Undo2, Send } from "lucide-react-native";
+import { Bell, X, Clock, Undo2, Send, ShoppingCart } from "lucide-react-native";
 import * as MaquinariaService from "../services/maquinariaService";
 import * as PedidoService from "../services/pedidoProveedorService";
+import * as PedidoClienteService from "../services/pedidoClienteService"; 
 import { useUsers } from "../context/UserContext";
 import { auth } from "../../firebaseConfig";
 
@@ -21,6 +21,7 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
   const [adminNotifications, setAdminNotifications] = useState([]);
 
   const [respuestasPedidos, setRespuestasPedidos] = useState([]);
+  const [pedidosPendientes, setPedidosPendientes] = useState([]); 
   const { getUserFullName } = useUsers(); 
   const user = auth.currentUser;
 
@@ -49,16 +50,20 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
       unsubPedidos = PedidoService.streamRespuestasProveedor(
         user.uid,
         (data) => {
-          
-          setRespuestasPedidos(data);
+          setRespuestasPedidos(data.map(d => ({...d, notificationType: 'pedidoRespuesta'})));
         }
       );
     }
+    
+    const unsubPedidosCliente = PedidoClienteService.streamPedidosPendientesAdmin(
+      setPedidosPendientes
+    );
 
     return () => {
       unsubReservas();
       unsubAdmin();
       unsubPedidos();
+      unsubPedidosCliente(); 
     };
   }, [user]);
 
@@ -68,44 +73,54 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
       ...solicitudes,
       ...adminNotifications,
       ...respuestasPedidos,
+      ...pedidosPendientes, 
     ];
-
     
     combined.sort((a, b) => {
       const dateA =
         a.createdAt?.toDate() ||
         a.requestedAt?.toDate() ||
         a.fechaCreacion?.toDate() ||
+        a.fechaPedido?.toDate() || 
         0;
       const dateB =
         b.createdAt?.toDate() ||
         b.requestedAt?.toDate() ||
         b.fechaCreacion?.toDate() ||
+        b.fechaPedido?.toDate() || 
         0;
       return dateB - dateA;
     });
     return combined;
-  }, [solicitudes, adminNotifications, respuestasPedidos]);
+  }, [solicitudes, adminNotifications, respuestasPedidos, pedidosPendientes]); 
 
-  const unreadCount = allNotifications.length;
+  const unreadCount = useMemo(() => {
+    const unreadMaq = adminNotifications.filter(n => !n.read).length;
+    const unreadProv = respuestasPedidos.filter(n => !n.adminNotificado).length;
+    
+    return solicitudes.length + unreadMaq + unreadProv + pedidosPendientes.length;
+    
+  }, [solicitudes, adminNotifications, respuestasPedidos, pedidosPendientes]); 
 
   const handleOpenModal = () => {
     setModalVisible(true);
   };
 
   const handleItemClick = (item) => {
-    if (item.notificationType === "pending") {
-      
-      if (onNotificationClick) {
-        onNotificationClick(item); 
+    if (onNotificationClick) {
+      if (item.notificationType === "pending" || item.notificationType === "return") {
+        onNotificationClick('maquinaria'); 
+      } else if (item.notificationType === "pedidoRespuesta") {
+        onNotificationClick('compras'); 
+      } else if (item.notificationType === 'pedidoCliente') {
+        onNotificationClick('pedidosSocios'); 
       }
-    } else if (item.notificationType === "return") {
-      
+    }
+
+    if (item.notificationType === "return") {
       MaquinariaService.marcarNotificacionAdminLeida(item.id);
     } else if (item.notificationType === "pedidoRespuesta") {
-      
       PedidoService.marcarRespuestaPedidoLeida(item.id);
-      
     }
 
     setModalVisible(false);
@@ -113,6 +128,7 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
 
   const renderNotifItem = ({ item }) => {
     
+    // Solicitud de Maquinaria
     if (item.notificationType === "pending") {
       return (
         <TouchableOpacity
@@ -125,8 +141,7 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
           <View style={styles.notifContent}>
             <Text style={styles.notifTitle}>Nueva Solicitud de Reserva</Text>
             <Text style={styles.notifMessage}>
-              {getUserFullName(item.requestedById) ||
-                `Usuario ${item.requestedById.substring(0, 5)}...`}{" "}
+              {getUserFullName(item.requestedById) || "Usuario"}{" "}
               solicitó {item.machineName}
             </Text>
             <Text style={styles.notifTime}>
@@ -137,7 +152,7 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
       );
     }
 
-    
+    // Devolución de Maquinaria
     if (item.notificationType === "return") {
       return (
         <TouchableOpacity
@@ -160,17 +175,12 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
       );
     }
 
-    
-    
+    // Respuesta de Proveedor
     if (item.notificationType === "pedidoRespuesta") {
       const isAccepted = item.estado === "En proceso";
       const title = isAccepted ? "Pedido Aceptado" : "Pedido Rechazado";
       const color = isAccepted ? "#1D4ED8" : "#B91C1C"; 
-
-      
-      const providerName =
-        getUserFullName(item.idProveedor) ||
-        `Proveedor ${item.idProveedor.substring(0, 5)}...`;
+      const providerName = item.nombreProveedor || "El proveedor";
 
       return (
         <TouchableOpacity
@@ -200,6 +210,33 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
       );
     }
     
+    // --- (INICIO DE MODIFICACIÓN) ---
+    // Nuevo Pedido de Cliente (Socio)
+    if (item.notificationType === "pedidoCliente") {
+      // Usamos getUserFullName para mostrar el nombre en lugar del email
+      const socioName = getUserFullName(item.socioId) || item.socioNombre || 'Un socio';
+      
+      return (
+        <TouchableOpacity
+          style={[styles.notifCard, {borderColor: '#0891B2', backgroundColor: '#F0F9FF'}]}
+          onPress={() => handleItemClick(item)}
+        >
+          <View style={styles.notifIcon}>
+            <ShoppingCart size={24} color="#0891B2" />
+          </View>
+          <View style={styles.notifContent}>
+            <Text style={[styles.notifTitle, {color: '#0E7490'}]}>Nuevo Pedido de Socio</Text>
+            <Text style={styles.notifMessage}>
+              {socioName} ha realizado un pedido por C$ {item.totalPedido.toFixed(2)}.
+            </Text>
+            <Text style={styles.notifTime}>
+              {item.fechaPedido?.toDate().toLocaleDateString("es-ES")}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      );
+    }
+    // --- (FIN DE MODIFICACIÓN) ---
 
     return null; 
   };

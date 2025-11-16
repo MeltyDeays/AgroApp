@@ -10,19 +10,18 @@ import * as productoService from '../../services/productoService';
 import * as almacenService from '../../services/almacenService';
 import * as pedidoClienteService from '../../services/pedidoClienteService';
 import styles from '../../styles/socioStyles';
+// --- 1. Importar useUsers ---
+import { useUsers } from '../../context/UserContext';
 
 // --- Modal de Cantidad ---
 const QuantityModal = ({ visible, onClose, producto, onConfirm }) => {
   const [cantidad, setCantidad] = useState('1'); 
-
   useEffect(() => {
     if (visible) {
       setCantidad('1'); 
     }
   }, [visible]);
-
   if (!producto) return null;
-
   const handleConfirm = () => {
     const numCantidad = parseInt(cantidad, 10);
     if (isNaN(numCantidad) || numCantidad <= 0) {
@@ -32,11 +31,9 @@ const QuantityModal = ({ visible, onClose, producto, onConfirm }) => {
     onConfirm(numCantidad);
     onClose();
   };
-
   const handleClose = () => {
     onClose();
   };
-
   return (
     <Modal
       visible={visible}
@@ -60,7 +57,6 @@ const QuantityModal = ({ visible, onClose, producto, onConfirm }) => {
               <Text style={styles.quantityModalPrice}>C$ {producto.precio.toFixed(2)}</Text>
             </View>
           </View>
-
           <Text style={styles.quantityInputLabel}>Ingresa la cantidad de paquetes</Text>
           <TextInput
             style={styles.quantityInput}
@@ -70,7 +66,6 @@ const QuantityModal = ({ visible, onClose, producto, onConfirm }) => {
             autoFocus={true}
             selectTextOnFocus={true}
           />
-
           <View style={styles.quantityButtonRow}>
             <TouchableOpacity 
               style={[styles.quantityButton, styles.quantityButtonCancel]} 
@@ -91,7 +86,7 @@ const QuantityModal = ({ visible, onClose, producto, onConfirm }) => {
   );
 };
 
-// --- Modal para Agregar Tarjeta (CON CORRECCIONES) ---
+// --- Modal para Agregar Tarjeta ---
 const AddCardModal = ({ visible, onClose, onCardSaved }) => {
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -99,76 +94,53 @@ const AddCardModal = ({ visible, onClose, onCardSaved }) => {
   const [cardHolderName, setCardHolderName] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // --- (INICIO DE CORRECCIÓN 1: Lógica de formato) ---
-  
-  /**
-   * Formatea el número de tarjeta (ej: 1234 5678 ...)
-   */
   const handleCardNumberChange = (text) => {
-    const numericText = text.replace(/[^0-9]/g, ''); // Solo números
+    const numericText = text.replace(/[^0-9]/g, ''); 
     const formattedText = numericText
-      .replace(/(\d{4})/g, '$1 ') // Añadir espacio cada 4
-      .trim(); // Quitar espacio al final
+      .replace(/(\d{4})/g, '$1 ')
+      .trim(); 
     setCardNumber(formattedText);
   };
 
-  /**
-   * Formatea la fecha de vencimiento (ej: MM/YY)
-   */
   const handleExpiryDateChange = (text) => {
-    let v = text.replace(/[^0-9]/g, ''); // Solo números
-    
-    // Añadir / automáticamente después de MM
+    let v = text.replace(/[^0-9]/g, ''); 
     if (v.length > 2) {
       v = v.slice(0, 2) + '/' + v.slice(2);
     }
-    
-    // Prevenir que el usuario borre solo la barra (borra MM en su lugar)
     if (text.length === 2 && expiryDate.length === 3) {
       v = v.slice(0, 1);
     }
-    
     setExpiryDate(v);
   };
 
   const handleSaveCard = async () => {
-    // --- (INICIO DE CORRECCIÓN 2: Lógica de validación) ---
-    // 1. Quitar espacios del número de tarjeta ANTES de validar
     const numericCardNumber = cardNumber.replace(/\s/g, '');
 
-    // 2. Validar con los datos limpios
     if (numericCardNumber.length < 15 || expiryDate.length !== 5 || cvv.length < 3 || !cardHolderName) {
       Alert.alert("Datos Inválidos", "Por favor, completa todos los campos correctamente.");
       return;
     }
-    // --- (FIN DE CORRECCIÓN 2) ---
-
     setLoading(true);
     try {
       const newCard = {
         id: Date.now().toString(),
-        last4: numericCardNumber.slice(-4), // Usar el número limpio
+        last4: numericCardNumber.slice(-4), 
         expiryDate: expiryDate,
         cardHolderName: cardHolderName,
       };
-      
       const existingCardsJson = await SecureStore.getItemAsync('savedCards');
       const existingCards = existingCardsJson ? JSON.parse(existingCardsJson) : [];
       const newCards = [...existingCards, newCard];
-      
       await SecureStore.setItemAsync('savedCards', JSON.stringify(newCards));
       
       setLoading(false);
       Alert.alert("¡Éxito!", "Tarjeta guardada de forma segura.");
       onCardSaved(newCards); 
       onClose();
-
-      // Limpiar formulario
       setCardNumber('');
       setExpiryDate('');
       setCvv('');
       setCardHolderName('');
-
     } catch (error) {
       setLoading(false);
       Alert.alert("Error", "No se pudo guardar la tarjeta.");
@@ -195,45 +167,38 @@ const AddCardModal = ({ visible, onClose, onCardSaved }) => {
                 <X size={24} color="#6B7280" />
               </TouchableOpacity>
             </View>
-
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Nombre del Titular</Text>
               <TextInput style={styles.cardInput} value={cardHolderName} onChangeText={setCardHolderName} placeholder="Ej: Juan Pérez" />
             </View>
-
-            {/* --- (INICIO DE CORRECCIÓN 1: Aplicar handlers) --- */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Número de Tarjeta</Text>
               <TextInput 
                 style={styles.cardInput} 
                 value={cardNumber} 
-                onChangeText={handleCardNumberChange} // <-- Handler de formato
+                onChangeText={handleCardNumberChange}
                 placeholder="0000 0000 0000 0000" 
                 keyboardType="numeric" 
-                maxLength={19} // 16 dígitos + 3 espacios
+                maxLength={19}
               />
             </View>
-
             <View style={styles.cardRow}>
               <View style={[styles.inputGroup, styles.cardInputHalf]}>
                 <Text style={styles.label}>Vencimiento</Text>
                 <TextInput 
                   style={styles.cardInput} 
                   value={expiryDate} 
-                  onChangeText={handleExpiryDateChange} // <-- Handler de formato
+                  onChangeText={handleExpiryDateChange}
                   placeholder="MM/YY" 
                   keyboardType="numeric" 
-                  maxLength={5} // MM/YY
+                  maxLength={5}
                 />
               </View>
-              {/* --- (FIN DE CORRECCIÓN 1) --- */}
-              
               <View style={[styles.inputGroup, styles.cardInputHalf]}>
                 <Text style={styles.label}>CVV</Text>
                 <TextInput style={styles.cardInput} value={cvv} onChangeText={setCvv} placeholder="123" keyboardType="numeric" maxLength={4} secureTextEntry />
               </View>
             </View>
-
             <TouchableOpacity 
               style={[styles.checkoutButton, { marginTop: 16 }]} 
               onPress={handleSaveCard} 
@@ -254,7 +219,6 @@ const ProductCard = ({ item, onAddToCart, almacenes }) => {
   const almacenOrigen = useMemo(() => {
     return almacenes.find(a => a.id === item.almacenId);
   }, [almacenes, item.almacenId]);
-
   return (
     <View style={styles.cardContainer}>
       <Image 
@@ -343,12 +307,19 @@ const CartModal = ({ visible, onClose, cart, onRemove, onCheckout, total }) => {
   );
 };
 
-// --- Modal de Pago ---
+// --- Modal de Pago (MODIFICADO) ---
 const CheckoutModal = ({ visible, onClose, total, onPlaceOrder, savedCards, onAddNewCard }) => {
   const [selectedPayment, setSelectedPayment] = useState(null); 
   const [loading, setLoading] = useState(false);
+  // --- 2. Nuevo estado para la dirección ---
+  const [address, setAddress] = useState('');
 
   const handlePlaceOrder = async () => {
+    // --- 3. Validar la dirección ---
+    if (!address) {
+      Alert.alert("Error", "Por favor, ingresa una dirección de entrega.");
+      return;
+    }
     if (!selectedPayment) {
       Alert.alert("Error", "Por favor, selecciona un método de pago.");
       return;
@@ -358,10 +329,12 @@ const CheckoutModal = ({ visible, onClose, total, onPlaceOrder, savedCards, onAd
       const paymentMethod = selectedPayment.type;
       const paymentDetails = paymentMethod === 'Tarjeta' ? { last4: selectedPayment.last4 } : null;
       
-      await onPlaceOrder(paymentMethod, paymentDetails);
+      // --- 4. Pasar la dirección al handler ---
+      await onPlaceOrder(paymentMethod, paymentDetails, address);
       
       Alert.alert("¡Pedido Realizado!", "Tu pedido ha sido enviado al administrador para su aprobación.");
       setSelectedPayment(null);
+      setAddress(''); // Limpiar dirección
       onClose();
     } catch (error) {
       Alert.alert("Error", error.message);
@@ -386,59 +359,72 @@ const CheckoutModal = ({ visible, onClose, total, onPlaceOrder, savedCards, onAd
             </TouchableOpacity>
           </View>
           
-          <View style={styles.cartTotalRow}>
-            <Text style={styles.cartTotalLabel}>Total a Pagar</Text>
-            <Text style={styles.cartTotalValue}>C$ {total.toFixed(2)}</Text>
-          </View>
+          <ScrollView>
+            <View style={styles.cartTotalRow}>
+              <Text style={styles.cartTotalLabel}>Total a Pagar</Text>
+              <Text style={styles.cartTotalValue}>C$ {total.toFixed(2)}</Text>
+            </View>
 
-          <View style={styles.paymentOptionsContainer}>
-            <Text style={[styles.label, { marginBottom: 12 }]}>Selecciona un Método de Pago</Text>
-            
-            {savedCards.map(card => {
-              const isSelected = selectedPayment?.type === 'Tarjeta' && selectedPayment?.id === card.id;
-              return (
-                <TouchableOpacity 
-                  key={card.id}
-                  style={[styles.paymentCardItem, isSelected && styles.paymentCardItemSelected]}
-                  onPress={() => setSelectedPayment({ type: 'Tarjeta', id: card.id, last4: card.last4 })}
-                >
-                  <View style={styles.cardLogo}><CreditCard size={18} color="#6B7280" /></View>
-                  <View style={styles.cardDetails}>
-                    <Text style={styles.cardText}>**** **** **** {card.last4}</Text>
-                    <Text style={styles.cardTextSub}>{card.cardHolderName}</Text>
-                  </View>
-                  {isSelected && <CheckCircle size={24} color="#2563EB" />}
-                </TouchableOpacity>
-              );
-            })}
+            {/* --- 5. Campo de Dirección de Entrega --- */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { marginTop: 16 }]}>Dirección de Entrega</Text>
+              <TextInput 
+                style={[styles.searchBar, { paddingVertical: 12 }]} // Reutilizamos el estilo de searchBar
+                value={address} 
+                onChangeText={setAddress} 
+                placeholder="Ej: 50vrs al sur del parque, Juigalpa" 
+              />
+            </View>
+
+            <View style={styles.paymentOptionsContainer}>
+              <Text style={[styles.label, { marginBottom: 12 }]}>Selecciona un Método de Pago</Text>
+              
+              {savedCards.map(card => {
+                const isSelected = selectedPayment?.type === 'Tarjeta' && selectedPayment?.id === card.id;
+                return (
+                  <TouchableOpacity 
+                    key={card.id}
+                    style={[styles.paymentCardItem, isSelected && styles.paymentCardItemSelected]}
+                    onPress={() => setSelectedPayment({ type: 'Tarjeta', id: card.id, last4: card.last4 })}
+                  >
+                    <View style={styles.cardLogo}><CreditCard size={18} color="#6B7280" /></View>
+                    <View style={styles.cardDetails}>
+                      <Text style={styles.cardText}>**** **** **** {card.last4}</Text>
+                      <Text style={styles.cardTextSub}>{card.cardHolderName}</Text>
+                    </View>
+                    {isSelected && <CheckCircle size={24} color="#2563EB" />}
+                  </TouchableOpacity>
+                );
+              })}
+
+              <TouchableOpacity 
+                style={styles.paymentButton}
+                onPress={onAddNewCard}
+              >
+                <Plus size={24} color={'#2563EB'} />
+                <Text style={styles.paymentButtonText}>Agregar Nueva Tarjeta</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[
+                  styles.paymentButton, 
+                  selectedPayment?.type === 'Físico' && styles.paymentButtonSelected
+                ]}
+                onPress={() => setSelectedPayment({ type: 'Físico' })}
+              >
+                <Home size={24} color={selectedPayment?.type === 'Físico' ? '#2563EB' : '#6B7280'} />
+                <Text style={styles.paymentButtonText}>Pago en Físico (Efectivo)</Text>
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity 
-              style={styles.paymentButton}
-              onPress={onAddNewCard}
+              style={styles.checkoutButton} 
+              onPress={handlePlaceOrder} 
+              disabled={loading || !selectedPayment}
             >
-              <Plus size={24} color={'#2563EB'} />
-              <Text style={styles.paymentButtonText}>Agregar Nueva Tarjeta</Text>
+              {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.checkoutButtonText}>Realizar Pedido</Text>}
             </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[
-                styles.paymentButton, 
-                selectedPayment?.type === 'Físico' && styles.paymentButtonSelected
-              ]}
-              onPress={() => setSelectedPayment({ type: 'Físico' })}
-            >
-              <Home size={24} color={selectedPayment?.type === 'Físico' ? '#2563EB' : '#6B7280'} />
-              <Text style={styles.paymentButtonText}>Pago en Físico (Efectivo)</Text>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity 
-            style={styles.checkoutButton} 
-            onPress={handlePlaceOrder} 
-            disabled={loading || !selectedPayment}
-          >
-            {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.checkoutButtonText}>Realizar Pedido</Text>}
-          </TouchableOpacity>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -466,6 +452,8 @@ export default function InicioSocio() {
   const [isAddCardModalVisible, setIsAddCardModalVisible] = useState(false);
 
   const user = auth.currentUser;
+  // --- 6. Obtener el nombre completo del socio ---
+  const { getUserFullName } = useUsers();
 
   useEffect(() => {
     setLoading(true);
@@ -542,19 +530,24 @@ export default function InicioSocio() {
     setIsCheckoutVisible(true);
   };
 
-  const handlePlaceOrder = async (paymentMethod, paymentDetails) => {
+  // --- 7. Actualizar handlePlaceOrder ---
+  const handlePlaceOrder = async (paymentMethod, paymentDetails, address) => {
     if (!user) {
       throw new Error("No se ha podido identificar al usuario.");
     }
     const itemsToSave = cart.map(({ cartId, ...item }) => item);
     
+    // Obtener el nombre completo del socio desde el UserContext
+    const socioName = getUserFullName(user.uid) || user.email;
+    
     await pedidoClienteService.createPedidoCliente(
       user.uid,
-      user.displayName || user.email, 
+      socioName, // Usar el nombre completo
       itemsToSave,
       cartTotal,
       paymentMethod,
-      paymentDetails
+      paymentDetails,
+      address // Pasar la dirección
     );
     
     setCart([]);
