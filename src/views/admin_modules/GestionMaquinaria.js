@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -606,10 +605,16 @@ const SolicitudesTab = React.memo(
 
 const MaintenanceTab = React.memo(({ machines, requests, onUpdate }) => {
   
+  const { getUserFullName } = useUsers(); // 1. OBTÉN EL CONTEXTO
+
   const renderItem = useCallback(
     ({ item: request }) => {
       const machine = machines.find((m) => m.id === request.machineId);
       const imageSource = machine?.imageUrl ? { uri: machine.imageUrl } : null;
+      
+      // 2. RESUELVE EL NOMBRE (usando el nuevo campo o el ID)
+      const reporterName = request.requestedByName || getUserFullName(request.requestedById) || 'Desconocido';
+
       return (
         <View key={request.id} style={styles.card}>
           {imageSource ? (
@@ -645,6 +650,14 @@ const MaintenanceTab = React.memo(({ machines, requests, onUpdate }) => {
               Descripción:{" "}
               <Text style={styles.detailValue}>{request.description}</Text>
             </Text>
+
+            {/* 3. MUESTRA EL NOMBRE DEL EMPLEADO */}
+            <Text style={styles.detailLabel}>
+              Reportado por:{" "}
+              <Text style={styles.detailValue}>{reporterName}</Text>
+            </Text>
+            {/* --- Fin del bloque --- */}
+
             <Text style={styles.detailLabel}>
               Estado Actual:{" "}
               <Text style={styles.detailValue}>{request.status}</Text>
@@ -677,7 +690,7 @@ const MaintenanceTab = React.memo(({ machines, requests, onUpdate }) => {
         </View>
       );
     },
-    [onUpdate, machines]
+    [onUpdate, machines, getUserFullName] // 4. AÑADE a las dependencias
   );
   const keyExtractor = useCallback((item) => item.id.toString(), []);
   if (requests.length === 0) {
@@ -867,12 +880,23 @@ export default function GestionMaquinaria() {
     }
   }, []); 
 
+  // --- INICIO DE LA MODIFICACIÓN ---
+  // RELLENA ESTA FUNCIÓN
   const handleUpdateMaintenance = useCallback(
     async (mantenimientoId, status, machineId) => {
-      
+      try {
+        await MaquinariaService.actualizarEstadoMantenimiento(mantenimientoId, status, machineId);
+        Alert.alert("Éxito", `El estado del mantenimiento se actualizó a "${status}".`);
+        // No se necesita refresh manual, los listeners (streamMantenimientosPendientes y streamMaquinas)
+        // se encargarán de actualizar la UI automáticamente.
+      } catch (error) {
+        console.error("Error al actualizar estado de mantenimiento:", error);
+        Alert.alert("Error", "No se pudo actualizar el estado de la solicitud.");
+      }
     },
-    []
+    [] // No hay dependencias, ya que el servicio hace todo
   );
+  // --- FIN DE LA MODIFICACIÓN ---
 
   const handleEdit = useCallback((machine) => {
     setEditingMachine(machine);

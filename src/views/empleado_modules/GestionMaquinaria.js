@@ -1,4 +1,4 @@
-// src/views/empleado/GestionMaquinariaEmpleado.js
+// src/views/empleado/GestionMaquinaria.js
 import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
@@ -31,7 +31,7 @@ import { Picker } from "@react-native-picker/picker";
 import styles from "../../styles/maquinariaEmpleadoStyles";
 import * as MaquinariaService from "../../services/maquinariaService";
 import { auth } from "../../../firebaseConfig";
-import { useUsers } from "../../context/UserContext"; // <-- IMPORTADO
+import { useUsers } from "../../context/UserContext"; // <-- 1. IMPORTA EL CONTEXTO
 import {
   FILTRO_TIPOS_MAQUINARIA,
   FILTRO_ESTADOS_MAQUINARIA,
@@ -74,7 +74,7 @@ const MaquinariaAsignada = ({ assignedMachines, onMarkComplete }) => {
 export default function GestionMaquinariaEmpleado() {
   const navigation = useNavigation();
   const user = auth.currentUser;
-  const { getUserFullName } = useUsers(); // <-- USANDO EL HOOK
+  const { getUserFullName } = useUsers(); // <-- 2. OBTÉN LA FUNCIÓN DEL CONTEXTO
   const [machines, setMachines] = useState([]);
   const [assignedMachines, setAssignedMachines] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -271,7 +271,14 @@ export default function GestionMaquinariaEmpleado() {
       priority: priority,
     };
     try {
-      await MaquinariaService.crearSolicitudMantenimiento(mantenimientoData);
+      // --- INICIO DE LA MODIFICACIÓN ---
+      // 3. Obtiene el nombre completo del usuario
+      const fullName = user.displayName || `${getUserFullName(user.uid)}`;
+      
+      // 4. Pasa el nombre a la función del servicio
+      await MaquinariaService.crearSolicitudMantenimiento(mantenimientoData, fullName);
+      // --- FIN DE LA MODIFICACIÓN ---
+
       Alert.alert("Éxito", "Solicitud de mantenimiento enviada.");
       closeMaintModal();
     } catch (error) {

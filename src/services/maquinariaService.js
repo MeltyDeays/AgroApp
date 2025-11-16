@@ -1,4 +1,3 @@
-
 import { db } from '../../firebaseConfig'; 
 import {
   collection,
@@ -122,7 +121,6 @@ export const streamNotificacionesEmpleado = (userId, callback) => {
   });
 };
 
-
 export const streamNotificacionesAdmin = (callback) => {
   const q = query(
     collection(db, 'admin_notifications'),
@@ -154,13 +152,43 @@ export const crearSolicitudReserva = (reservaData) => {
 };
 
 
-export const crearSolicitudMantenimiento = (mantenimientoData) => {
-  return addDoc(collection(db, 'maintenanceRequests'), {
+// --- INICIO DE LA MODIFICACIÓN ---
+/**
+ * Crea una solicitud de mantenimiento, actualiza el estado de la máquina
+ * y envía una notificación al admin.
+ */
+export const crearSolicitudMantenimiento = async (mantenimientoData, userName) => {
+  // Usamos un Lote (Batch) para hacer las 3 cosas a la vez
+  const batch = writeBatch(db);
+
+  // 1. Crear la solicitud de mantenimiento
+  const newMaintRef = doc(collection(db, 'maintenanceRequests'));
+  batch.set(newMaintRef, {
     ...mantenimientoData,
-    status: 'pending', 
+    status: 'pending',
     requestedAt: serverTimestamp(),
+    // Aquí solucionamos el Problema 2: Guardamos el nombre
+    requestedByName: userName || 'No identificado',
   });
+
+  // 2. Actualizar el estado de la máquina
+  const machineRef = doc(db, 'machines', mantenimientoData.machineId);
+  const newStatus = mantenimientoData.priority === 'high' ? 'broken' : 'maintenance';
+  batch.update(machineRef, {
+    status: newStatus
+  });
+
+  // 3. Crear la notificación para el Admin (¡ESTO FALTABA!)
+  await crearNotificacionAdmin(
+    'Falla de Maquinaria Reportada',
+    `${userName || 'Un empleado'} reportó un problema con "${mantenimientoData.machineName}".`,
+    mantenimientoData.priority === 'high' ? 'error' : 'info'
+  );
+
+  // 4. Ejecutar todas las operaciones
+  return batch.commit();
 };
+// --- FIN DE LA MODIFICACIÓN ---
 
 
 export const marcarTareaCompletada = async (machine, userId, userName) => {
