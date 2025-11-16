@@ -11,7 +11,9 @@ import {
   setDoc, 
   Timestamp,
   deleteDoc, 
-  orderBy 
+  orderBy,
+  writeBatch, // <-- AÑADIDO
+  onSnapshot // <-- AÑADIDO
 } from 'firebase/firestore';
 
 /**
@@ -58,7 +60,9 @@ export const crearSector = async (id, nombre, color, coordsString) => {
       id: id,
       nombre: nombre,
       color: color,
-      coordsMapa: coordsMapa 
+      coordsMapa: coordsMapa,
+      supervisorId: null, // <-- AÑADIDO
+      supervisorNombre: null, // <-- AÑADIDO
     });
 
     return { success: true };
@@ -90,6 +94,7 @@ export const updateSectorDetails = async (sectorId, nombre, color) => {
  */
 export const deleteSector = async (sectorId) => {
   try {
+    // TODO: Antes de eliminar, verificar si tiene un supervisor y quitarle el rol.
     await deleteDoc(doc(db, "sectores", sectorId));
     return { success: true };
   } catch (error) {
@@ -229,3 +234,131 @@ export const marcarTareaCompletada = async (tareaId) => {
     throw new Error("No se pudo completar la tarea.");
   }
 };
+
+
+// --- (INICIO DE NUEVAS FUNCIONES DE SUPERVISOR) ---
+
+/**
+ * Crea una solicitud para designar a un empleado como supervisor de un sector.
+ */
+export const designarSupervisor = async (sector, empleado, adminId) => {
+  try {
+    // 1. Verificar si ya existe una solicitud pendiente para este empleado Y este sector
+    const qPendiente = query(
+      collection(db, "supervisorRequests"),
+      where("empleadoId", "==", empleado.uid),
+      where("sectorId", "==", sector.id),
+      where("estado", "==", "pendiente")
+    );
+    const FgPendiente = await getDocs(qPendiente);
+    if (!FgPendiente.empty) {
+      throw new Error("Ya existe una solicitud pendiente para este empleado en este sector.");
+    }
+    
+    // 2. Verificar si el sector ya tiene supervisor
+    if (sector.supervisorId) {
+       throw new Error(`El sector "${sector.nombre}" ya tiene a ${sector.supervisorNombre} como supervisor.`);
+    }
+
+    // 3. Crear la solicitud
+    await addDoc(collection(db, "supervisorRequests"), {
+      adminId: adminId,
+      empleadoId: empleado.uid,
+      empleadoNombre: `${empleado.nombres} ${empleado.apellidos}`,
+      sectorId: sector.id,
+      sectorNombre: sector.nombre,
+      estado: "pendiente",
+      fechaCreacion: Timestamp.now(),
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error al designar supervisor: ", error);
+    throw new Error(error.message || "No se pudo enviar la solicitud.");
+  }
+};
+
+/**
+ * (Para Empleado) Escucha las solicitudes de supervisor pendientes.
+ */
+export const streamSupervisorRequests = (empleadoId, callback) => {
+  if (!empleadoId) return () => {};
+
+  const q = query(
+    collection(db, "supervisorRequests"),
+    where("empleadoId", "==", empleadoId),
+    where("estado", "==", "pendiente"),
+    orderBy("fechaCreacion", "desc")
+  );
+
+  return onSnapshot(q, (querySnapshot) => {
+    const solicitudes = [];
+    querySnapshot.forEach((doc) => {
+      solicitudes.push({ 
+        id: doc.id, 
+        ...doc.data(), 
+        notificationType: 'supervisorRequest' // Tipo para la campana
+      });
+    });
+    callback(solicitudes);
+  }, (error) => {
+    console.error("Error al obtener solicitudes de supervisor: ", error);
+    callback([]);
+  });
+};
+
+/**
+ * (Para Empleado) Responde a una solicitud de supervisor (Aceptar o Rechazar).
+ */
+export const responderSolicitudSupervisor = async (solicitud, aceptar) => {
+  const batch = writeBatch(db);
+  
+  try {
+    // 1. Referencia a la solicitud
+    const requestRef = doc(db, "supervisorRequests", solicitud.id);
+    
+    if (aceptar) {
+      // --- Lógica de ACEPTACIÓN ---
+      
+      // 2. Actualizar el sector
+      const sectorRef = doc(db, "sectores", solicitud.sectorId);
+      batch.update(sectorRef, {
+        supervisorId: solicitud.empleadoId,
+        supervisorNombre: solicitud.empleadoNombre
+      });
+      
+      // 3. Actualizar el documento 'empleados'
+      const empleadoRef = doc(db, "empleados", solicitud.empleadoId);
+      batch.update(empleadoRef, {
+        esSupervisorDe: solicitud.sectorId
+      });
+
+      // 4. Actualizar el documento 'usuarios' (para consistencia)
+      const usuarioRef = doc(db, "usuarios", solicitud.empleadoId);
+      batch.update(usuarioRef, {
+        esSupervisorDe: solicitud.sectorId
+      });
+      
+      // 5. Actualizar la solicitud
+      batch.update(requestRef, {
+        estado: "aceptada"
+      });
+      
+    } else {
+      // --- Lógica de RECHAZO ---
+      // 1. Solo se actualiza la solicitud
+      batch.update(requestRef, {
+        estado: "rechazada"
+      });
+    }
+    
+    // Ejecutar todas las operaciones
+    await batch.commit();
+    return { success: true };
+    
+  } catch (error) {
+    console.error("Error al responder solicitud: ", error);
+    throw new Error(error.message || "No se pudo responder a la solicitud.");
+  }
+};
+// --- (FIN DE NUEVAS FUNCIONES DE SUPERVISOR) ---

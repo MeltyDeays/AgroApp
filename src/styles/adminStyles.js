@@ -264,6 +264,9 @@ export default StyleSheet.create({
   roleSocio: { color: "#7E22CE", backgroundColor: "#F3E8FF" }, 
   roleMaquinaria: { color: "#4B5563", backgroundColor: "#F3F4F6" }, 
   roleProveedor: { color: "#0891B2", backgroundColor: "#CFFAFE" }, 
+  
+  // --- AÑADIDO ---
+  roleSupervisor: { color: "#FFFFFF", backgroundColor: "#1F2937" }, // Negro
 
   // --- (INICIO DE MODIFICACIÓN) ---
   // Estados de Pedidos (Nuevos)

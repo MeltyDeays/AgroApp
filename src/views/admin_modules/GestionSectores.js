@@ -3,13 +3,16 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import {
   View, Text, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator, FlatList, Platform, KeyboardAvoidingView
 } from 'react-native'; 
-import { MapPin, ChevronLeft, Plus, Edit, Trash2, Search, Users, ClipboardList, ChevronDown, Check } from 'lucide-react-native';
-import { TabView, TabBar } from "react-native-tab-view"; // <-- AÑADIDO
-import { crearSector, fetchSectores, updateSectorDetails, deleteSector, fetchTareas, marcarTareaCompletada } from '../../services/mapaService'; // <-- MODIFICADO
-import { getAllUsers } from '../../services/usuarioService'; // <-- AÑADIDO
+// --- AÑADIDO: UserCheck ---
+import { MapPin, ChevronLeft, Plus, Edit, Trash2, Search, Users, ClipboardList, ChevronDown, Check, UserCheck } from 'lucide-react-native';
+import { TabView, TabBar } from "react-native-tab-view"; 
+// --- MODIFICADO: Importar designarSupervisor ---
+import { crearSector, fetchSectores, updateSectorDetails, deleteSector, fetchTareas, marcarTareaCompletada, designarSupervisor } from '../../services/mapaService'; 
+import { getAllUsers } from '../../services/usuarioService'; 
 import { useUsers } from "../../context/UserContext";
-import { Picker } from '@react-native-picker/picker'; // <-- AÑADIDO
+import { Picker } from '@react-native-picker/picker'; 
 import styles from '../../styles/adminStyles'; 
+import { auth } from '../../../firebaseConfig'; // <-- AÑADIDO: Importar auth
 
 // --- Formulario para crear/editar Sector ---
 const SectorForm = ({ onBackToList, initialData = null }) => {
@@ -179,6 +182,7 @@ const SectoresTab = ({ onGoToAddForm, onEditSector, refreshKey }) => {
           style: "destructive", 
           onPress: async () => {
             try {
+              // TODO: Añadir lógica para quitar supervisorId del empleado si se elimina el sector
               const result = await deleteSector(item.id); 
               if (result.success) { 
                 Alert.alert("Éxito", "Sector eliminado."); 
@@ -203,6 +207,10 @@ const SectoresTab = ({ onGoToAddForm, onEditSector, refreshKey }) => {
                 <View style={styles.userItemText}>
                     <Text style={styles.userName}>{item.nombre}</Text>
                     <Text style={styles.userEmail}>ID: {item.id}</Text>
+                    {/* --- AÑADIDO: Mostrar supervisor actual --- */}
+                    <Text style={[styles.userEmail, {marginTop: 4, fontStyle: 'italic'}]}>
+                      Encargado: {item.supervisorNombre || 'Sin asignar'}
+                    </Text>
                 </View>
                 <View style={[styles.userItemRole, {backgroundColor: item.color || '#CCC', width: 40, height: 20, marginBottom: 0}]} />
             </View>
@@ -241,11 +249,12 @@ const SectoresTab = ({ onGoToAddForm, onEditSector, refreshKey }) => {
 };
 
 
-// --- Tab 2: Empleados por Sector ---
+// --- Tab 2: Empleados por Sector (MODIFICADO) ---
 const EmpleadosTab = ({ sectores }) => {
   const [userList, setUserList] = useState([]); // Usamos una lista local
   const [loading, setLoading] = useState(true);
   const [filterSector, setFilterSector] = useState('all');
+  const admin = auth.currentUser; // Obtener el admin actual
   
   // Cargamos todos los usuarios y los almacenamos.
   const fetchUsers = async () => {
@@ -261,16 +270,58 @@ const EmpleadosTab = ({ sectores }) => {
   
   // Filtramos por rol y sector
   const filteredEmployees = useMemo(() => {
-    let employees = userList.filter(user => (user.rol === 'empleado' || user.role === 'empleado') && user.sectorId);
+    let employees = userList.filter(user => (user.rol === 'empleado' || user.role === 'empleado'));
     
     if (filterSector !== 'all') {
+      // Muestra solo empleados asignados a ESE sector
       employees = employees.filter(user => user.sectorId === filterSector);
+    } else {
+      // Muestra TODOS los empleados
     }
     return employees;
   }, [userList, filterSector]);
 
+  // --- AÑADIDO: Lógica para designar supervisor ---
+  const handleDesignar = async (empleado) => {
+    if (filterSector === 'all') {
+      Alert.alert("Acción Requerida", "Por favor, primero filtre por un sector específico para asignar un supervisor.");
+      return;
+    }
+    
+    const sectorActual = sectores.find(s => s.id === filterSector);
+    if (!sectorActual) {
+      Alert.alert("Error", "No se pudo encontrar el sector seleccionado.");
+      return;
+    }
+
+    Alert.alert(
+      "Confirmar Designación",
+      `¿Enviar solicitud a ${empleado.nombres} para ser supervisor de "${sectorActual.nombre}"?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Sí, Enviar",
+          onPress: async () => {
+            try {
+              const result = await designarSupervisor(sectorActual, empleado, admin.uid);
+              if (result.success) {
+                Alert.alert("Éxito", "Solicitud enviada al empleado.");
+              }
+            } catch (error) {
+              Alert.alert("Error", error.message);
+            }
+          },
+        },
+      ]
+    );
+  };
+  
   const renderEmployeeItem = ({ item }) => {
-    const sectorName = sectores.find(s => s.id === item.sectorId)?.nombre || `ID: ${item.sectorId}`;
+    const sectorName = sectores.find(s => s.id === item.sectorId)?.nombre || 'Sin Asignar';
+    
+    // --- AÑADIDO: Lógica de Badge ---
+    const esSupervisorDelSectorFiltrado = filterSector !== 'all' && item.esSupervisorDe === filterSector;
+    
     return (
       <View style={styles.userItem}>
         <View style={styles.userItemHeader}>
@@ -280,16 +331,41 @@ const EmpleadosTab = ({ sectores }) => {
             <Text style={[styles.userEmail, {fontWeight: 'bold', marginTop: 4}]}>Sector: {sectorName}</Text>
           </View>
           <View style={styles.userItemRoleContainer}>
-            <Text style={[styles.userItemRole, styles.roleEmpleado]}>Empleado</Text>
+            {/* --- AÑADIDO: Mostrar Badge de Supervisor --- */}
+            {esSupervisorDelSectorFiltrado ? (
+              <Text style={[styles.userItemRole, styles.roleSupervisor]}>Supervisor</Text>
+            ) : (
+              <Text style={[styles.userItemRole, styles.roleEmpleado]}>Empleado</Text>
+            )}
           </View>
         </View>
+        
+        {/* --- AÑADIDO: Botón de Designar (solo si se filtra por sector) --- */}
+        {filterSector !== 'all' && (
+          <View style={[styles.expandedDetailsContainer, {borderTopWidth: 0, paddingVertical: 10}]}>
+            <View style={styles.expandedActionsContainer}>
+                <TouchableOpacity 
+                  style={[styles.actionButton, styles.pedidoButton]} 
+                  onPress={() => handleDesignar(item)}
+                  // Deshabilitar si ya es supervisor de este sector
+                  disabled={esSupervisorDelSectorFiltrado} 
+                >
+                  <UserCheck size={16} color={esSupervisorDelSectorFiltrado ? "#CCC" : "#FFFFFF"} />
+                  <Text style={[styles.actionButtonText, styles.pedidoButtonText, esSupervisorDelSectorFiltrado && {color: "#CCC"}]}>
+                    {esSupervisorDelSectorFiltrado ? 'Ya es Encargado' : 'Designar Encargado'}
+                  </Text>
+                </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
       </View>
     );
   };
   
   // Opción "Todos" + Lista de sectores
   const pickerItems = useMemo(() => [
-    { id: 'all', nombre: 'Todos los Sectores' },
+    { id: 'all', nombre: 'Todos los Empleados' }, // Texto cambiado
     ...sectores
   ], [sectores]);
 
@@ -299,7 +375,7 @@ const EmpleadosTab = ({ sectores }) => {
         <Text style={styles.formTitle}>Empleados por Sector</Text>
       </View>
       <Text style={{...styles.userEmail, paddingHorizontal: 0, marginBottom: 20, fontSize: 13}}>
-        Muestra empleados con un campo "sectorId" definido. Asegúrese de asignar sectores en la gestión de usuarios.
+        Seleccione un sector para ver los empleados asignados y designar un supervisor.
       </Text>
       
       {/* Filtro por Sector */}
@@ -319,7 +395,7 @@ const EmpleadosTab = ({ sectores }) => {
       {loading ? ( 
         <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }}/> 
       ) : ( 
-        <FlatList data={filteredEmployees} renderItem={renderEmployeeItem} keyExtractor={(item) => item.uid} ListEmptyComponent={<Text style={styles.emptyListText}>No se encontraron empleados en este sector.</Text>} removeClippedSubviews={false} /> 
+        <FlatList data={filteredEmployees} renderItem={renderEmployeeItem} keyExtractor={(item) => item.uid} ListEmptyComponent={<Text style={styles.emptyListText}>No se encontraron empleados.</Text>} removeClippedSubviews={false} /> 
       )}
     </View>
   );
@@ -327,7 +403,7 @@ const EmpleadosTab = ({ sectores }) => {
 
 
 // --- Tab 3: Gestión de Tareas ---
-const TareasTab = ({ sectores }) => {
+const TareasTab = ({ sectores, isFocused }) => {
   const [loading, setLoading] = useState(true);
   const [tareasList, setTareasList] = useState([]);
   const [filterEstado, setFilterEstado] = useState('pendiente');
@@ -339,13 +415,17 @@ const TareasTab = ({ sectores }) => {
       const tareas = await fetchTareas();
       setTareasList(tareas);
     } catch (error) {
-      // Dejamos el alert para informar sobre el error de permisos de Firestore.
       Alert.alert("Error", error.message); 
     } finally {
       setLoading(false);
     }
   };
-  useEffect(() => { fetchTasks(); }, []);
+  
+  useEffect(() => {
+    if (isFocused) {
+      fetchTasks();
+    }
+  }, [isFocused]);
 
   const filteredTasks = useMemo(() => {
     return tareasList.filter(t => filterEstado === 'all' || t.estado === filterEstado).sort((a, b) => {
@@ -473,6 +553,7 @@ export default function GestionSectores() {
       console.error("Error loading sectors for tab view:", e);
     }
   };
+  // --- MODIFICADO: Recarga sectores si el refreshKey cambia ---
   useEffect(() => { loadSectores(); }, [refreshKey]);
 
 
@@ -513,12 +594,15 @@ export default function GestionSectores() {
         case "empleados":
           return <EmpleadosTab sectores={sectores} />;
         case "tareas":
-          return <TareasTab sectores={sectores} />;
+          return <TareasTab 
+                    sectores={sectores} 
+                    isFocused={index === 2} 
+                 />;
         default:
           return null;
       }
     },
-    [handleEditSector, refreshKey, sectores]
+    [handleEditSector, refreshKey, sectores, index] 
   );
 
   if (viewMode === 'add') {
