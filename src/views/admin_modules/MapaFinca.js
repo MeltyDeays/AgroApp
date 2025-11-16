@@ -28,7 +28,6 @@ import * as almacenService from '../../services/almacenService';
 import { Picker } from '@react-native-picker/picker'; 
 import almacenStyles from '../../styles/almacenStyles'; 
 import DateTimePicker from "@react-native-community/datetimepicker";
-
 import { CompletarTareaModal } from './GestionSectores';
 
 
@@ -77,10 +76,13 @@ const SectorActionModal = ({
 };
 
 
+// --- Modal para ver Empleados ---
 const EmpleadosModal = ({ visible, sector, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [empleados, setEmpleados] = useState([]);
-  const { getUserFullName } = useUsers();
+  
+  // --- (CORRECCIÓN: Ya no necesitamos getUserFullName) ---
+  // const { getUserFullName } = useUsers(); 
 
   useEffect(() => {
     if (visible && sector) { 
@@ -106,7 +108,10 @@ const EmpleadosModal = ({ visible, sector, onClose }) => {
               keyExtractor={(item) => item.uid}
               renderItem={({ item }) => (
                 <View style={styles.listItem}>
-                  <Text style={styles.listText}>{getUserFullName(item.uid)}</Text>
+                  {/* --- (INICIO DE LA CORRECCIÓN) --- */}
+                  {/* Usamos los datos directos del objeto 'item' */}
+                  <Text style={styles.listText}>{item.nombres} {item.apellidos}</Text>
+                  {/* --- (FIN DE LA CORRECCIÓN) --- */}
                 </View>
               )}
               ListEmptyComponent={<Text style={styles.emptyListText}>No hay empleados asignados.</Text>}
@@ -121,7 +126,7 @@ const EmpleadosModal = ({ visible, sector, onClose }) => {
   );
 };
 
-
+// --- Modal para crear Tareas (con ScrollView) ---
 const TareaModal = ({ visible, sector, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [titulo, setTitulo] = useState('');
@@ -247,11 +252,10 @@ const TareaModal = ({ visible, sector, onClose }) => {
 };
 
 
+// --- Modal para Tareas Actuales ---
 const TareasActualesModal = ({ visible, onClose, sectores }) => {
   const [loading, setLoading] = useState(true);
   const [tareas, setTareas] = useState([]);
-  
-  
   const [almacenes, setAlmacenes] = useState([]);
   const [completarModalVisible, setCompletarModalVisible] = useState(false);
   const [tareaParaCompletar, setTareaParaCompletar] = useState(null);
@@ -272,7 +276,6 @@ const TareasActualesModal = ({ visible, onClose, sectores }) => {
   useEffect(() => {
     if (visible) {
       cargarTareas();
-      
       const unsubAlmacenes = almacenService.streamAlmacenes((data) => {
         setAlmacenes(data);
       });
@@ -280,7 +283,6 @@ const TareasActualesModal = ({ visible, onClose, sectores }) => {
     }
   }, [visible]);
 
-  
   const handleMarcarCompletada = (tarea) => {
     if (almacenes.length === 0) {
         Alert.alert("Error", "No se han cargado almacenes. No se puede registrar la cosecha.");
@@ -290,7 +292,6 @@ const TareasActualesModal = ({ visible, onClose, sectores }) => {
     setCompletarModalVisible(true);
   };
 
-  
   const handleSaveCosecha = async (tarea, cantidad, unidad, almacenId) => {
       try {
         await mapaService.marcarTareaCompletada(tarea, cantidad, unidad, almacenId);
@@ -318,7 +319,6 @@ const TareasActualesModal = ({ visible, onClose, sectores }) => {
         <Text style={styles.taskDetail}>Sector: {sector?.nombre || item.sectorId}</Text>
         <Text style={styles.taskDetail}>Detalles: {item.detalles}</Text>
         <Text style={styles.taskDetail}>Período: {fechaInicio} al {fechaFin}</Text>
-        {/* Mostrar cosecha si está completada */}
         {isCompleted && (
           <Text style={[styles.taskDetail, {color: '#059669', fontWeight: 'bold'}]}>
             Cosecha: {item.cantidadCultivadaKg ? `${item.cantidadCultivadaKg.toFixed(0)} kg` : 'N/A'}
@@ -368,7 +368,6 @@ const TareasActualesModal = ({ visible, onClose, sectores }) => {
         </View>
       </Modal>
 
-      {/* Renderizar el modal importado */}
       <CompletarTareaModal
         visible={completarModalVisible}
         onClose={() => setCompletarModalVisible(false)}
@@ -381,6 +380,7 @@ const TareasActualesModal = ({ visible, onClose, sectores }) => {
 };
 
 
+// --- Reducer para el estado de edición del mapa ---
 const editorInitialState = {
   status: 'idle', 
   editingSectorId: null, 

@@ -10,13 +10,13 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   Platform,
+  Image // <-- 1. IMPORTAR Image
 } from 'react-native';
 
-import { Sprout } from 'lucide-react-native'; 
+// --- 2. IMPORTAR Eye y EyeOff, QUITAR Sprout ---
+import { Eye, EyeOff } from 'lucide-react-native'; 
 import { loginUser } from '../services/authService'; 
 import styles from '../styles/loginStyles'; 
-
-
 
 export default function Login() {
   
@@ -24,6 +24,8 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // --- 3. AÑADIR ESTADO PARA EL OJO ---
+  const [secureTextEntry, setSecureTextEntry] = useState(true);
   
   const passwordRef = useRef(null);
 
@@ -66,20 +68,34 @@ export default function Login() {
           />
         </View>
 
+        {/* --- 4. CAMPO DE CONTRASEÑA MODIFICADO --- */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Contraseña</Text>
-          <TextInput
-            ref={passwordRef} 
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            placeholder="••••••••"
-            secureTextEntry
-            returnKeyType="done" 
-            onSubmitEditing={handleLogin} 
-            placeholderTextColor="#9CA3AF"
-          />
+          <View style={styles.passwordWrapper}>
+            <TextInput
+              ref={passwordRef} 
+              style={styles.passwordInput}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              secureTextEntry={secureTextEntry} // Controlado por el estado
+              returnKeyType="done" 
+              onSubmitEditing={handleLogin} 
+              placeholderTextColor="#9CA3AF"
+            />
+            <TouchableOpacity 
+              onPress={() => setSecureTextEntry(!secureTextEntry)}
+              style={styles.eyeIcon}
+            >
+              {secureTextEntry ? (
+                <EyeOff size={20} color="#6B7280" />
+              ) : (
+                <Eye size={20} color="#6B7280" />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
+        {/* --- FIN DE LA MODIFICACIÓN --- */}
 
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
           {loading ? (
@@ -101,15 +117,19 @@ export default function Login() {
         <TouchableOpacity activeOpacity={1} onPress={Keyboard.dismiss} style={{flex: 1}}>
           <View style={styles.container}>
             <View style={styles.header}>
-              <View style={styles.logoContainer}>
-                <Sprout size={40} color="#FFFFFF" />
-              </View>
+              
+              {/* --- 5. CAMBIO DE LOGO --- */}
+              <Image
+                source={require('../images/AgroApp.png')}
+                style={styles.logo} // Usaremos un nuevo estilo 'logo'
+              />
+              {/* --- FIN DE LA MODIFICACIÓN --- */}
+
               <Text style={styles.title}>Bienvenido a AgroApp</Text>
               <Text style={styles.subtitle}>Sistema de Gestión de Granja</Text>
             </View>
 
             <View style={styles.card}>
-              {/* --- CORRECCIÓN: Se elimina el contenedor de pestañas --- */}
               {renderFormContent()}
             </View>
 

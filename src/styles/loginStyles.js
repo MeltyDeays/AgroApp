@@ -10,16 +10,16 @@ export default StyleSheet.create({
     paddingTop: 32, 
   },
   header: { alignItems: 'center', marginBottom: 32 },
-  logoContainer: {
-    width: 64,
-    height: 64,
-    backgroundColor: '#22c55e', 
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+  
+  // --- 1. REEMPLAZAR 'logoContainer' CON 'logo' ---
+  logo: {
+    width: 150,
+    height: 150,
+    resizeMode: 'contain',
     marginBottom: 16,
-    elevation: 5,
   },
+  // --- FIN DE LA MODIFICACIÓN ---
+
   title: { fontSize: 24, fontWeight: 'bold', color: '#166534' }, 
   subtitle: { fontSize: 14, color: '#52525b' }, 
   card: {
@@ -31,29 +31,13 @@ export default StyleSheet.create({
     boxShadow: '0 5px 15px rgba(0,0,0,0.1)', 
     elevation: 10, 
   },
-  tabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    padding: 4,
-    marginBottom: 24,
-  },
-  tabButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 6,
-    gap: 8,
-  },
-  tabButtonActive: {
-    backgroundColor: '#FFFFFF',
-    boxShadow: '0 1px 5px rgba(0,0,0,0.1)', 
-    elevation: 2, 
-  },
-  tabLabel: { fontSize: 14, color: '#6B7280' },
-  tabLabelActive: { fontWeight: '600', color: '#166534' },
+
+  // --- 2. ELIMINAR ESTILOS DE PESTAÑAS NO USADOS ---
+  // Se eliminaron 'tabsContainer', 'tabButton', 'tabButtonActive', 
+  // 'tabLabel', y 'tabLabelActive' que estaban en tu archivo original 
+  // pero no se usaban en el JSX que me pasaste.
+  // --- FIN DE LA MODIFICACIÓN ---
+
   formHeader: { alignItems: 'center', marginBottom: 16 },
   formTitle: { fontSize: 18, fontWeight: '600', color: '#1f2937' }, 
   formSubtitle: { fontSize: 14, color: '#6B7280', marginTop: 4 },
@@ -68,6 +52,29 @@ export default StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#F9FAFB',
   },
+
+  // --- 3. AÑADIR ESTILOS PARA EL CAMPO DE CONTRASEÑA ---
+  passwordWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    backgroundColor: '#F9FAFB',
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    // Aseguramos que el color del texto sea el correcto
+    color: '#1f2937', 
+  },
+  eyeIcon: {
+    padding: 12,
+  },
+  // --- FIN DE LA MODIFICACIÓN ---
+
   loginButton: {
     backgroundColor: '#22c55e',
     paddingVertical: 12, 
