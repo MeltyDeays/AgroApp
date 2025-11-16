@@ -7,29 +7,29 @@ export default StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    paddingTop: 32, // <-- AÑADIDO: Espacio para la barra de notificaciones
+    paddingTop: 32, 
   },
   header: { alignItems: 'center', marginBottom: 32 },
   logoContainer: {
     width: 64,
     height: 64,
-    backgroundColor: '#22c55e', // green-600
+    backgroundColor: '#22c55e', 
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
     elevation: 5,
   },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#166534' }, // <-- CAMBIO: 28 -> 24
-  subtitle: { fontSize: 14, color: '#52525b' }, // <-- CAMBIO: 16 -> 14
+  title: { fontSize: 24, fontWeight: 'bold', color: '#166534' }, 
+  subtitle: { fontSize: 14, color: '#52525b' }, 
   card: {
     width: '100%',
     maxWidth: 400,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 24,
-    boxShadow: '0 5px 15px rgba(0,0,0,0.1)', // Para web
-    elevation: 10, // Para Android
+    boxShadow: '0 5px 15px rgba(0,0,0,0.1)', 
+    elevation: 10, 
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -49,13 +49,13 @@ export default StyleSheet.create({
   },
   tabButtonActive: {
     backgroundColor: '#FFFFFF',
-    boxShadow: '0 1px 5px rgba(0,0,0,0.1)', // Para web
-    elevation: 2, // Para Android
+    boxShadow: '0 1px 5px rgba(0,0,0,0.1)', 
+    elevation: 2, 
   },
   tabLabel: { fontSize: 14, color: '#6B7280' },
   tabLabelActive: { fontWeight: '600', color: '#166534' },
   formHeader: { alignItems: 'center', marginBottom: 16 },
-  formTitle: { fontSize: 18, fontWeight: '600', color: '#1f2937' }, // <-- CAMBIO: 20 -> 18
+  formTitle: { fontSize: 18, fontWeight: '600', color: '#1f2937' }, 
   formSubtitle: { fontSize: 14, color: '#6B7280', marginTop: 4 },
   inputGroup: { marginBottom: 16 },
   label: { fontSize: 14, color: '#374151', marginBottom: 8, fontWeight: '500' },
@@ -70,12 +70,12 @@ export default StyleSheet.create({
   },
   loginButton: {
     backgroundColor: '#22c55e',
-    paddingVertical: 12, // <-- CAMBIO: 14 -> 12
+    paddingVertical: 12, 
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 8,
   },
-  loginButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold' }, // <-- CAMBIO: 16 -> 14
+  loginButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold' }, 
   divider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 24 },
   demoButton: {
     borderWidth: 1,

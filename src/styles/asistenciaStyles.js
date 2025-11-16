@@ -3,8 +3,8 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   contenedor: { flex: 1, backgroundColor: "#f9fafb" },
   contentContainer: { 
-    paddingTop: 20, // <-- CAMBIO: 10 -> 20 (Para la barra de notificaciones)
-    paddingHorizontal: 10, // <-- AÑADIDO
+    paddingTop: 20, 
+    paddingHorizontal: 10, 
     paddingBottom: 50 
   },
   listaContenedor: {
@@ -50,11 +50,11 @@ export default StyleSheet.create({
     color: "#ef4444", 
   },
   encabezado: { marginBottom: 20, alignItems: "center" },
-  titulo: { fontSize: 22, fontWeight: "bold", color: "#047857" }, // <-- CAMBIO: 24 -> 22
+  titulo: { fontSize: 22, fontWeight: "bold", color: "#047857" }, 
   subtitulo: { fontSize: 14, color: "#64748b", textAlign: "center" }, 
   fecha: { fontSize: 14, color: "#475569", marginTop: 5 }, 
 
-  // --- ESTILOS PARA ESTADÍSTICAS ---
+  
   grillaEstadisticas: {
     flexDirection: "row", 
     justifyContent: "space-between", 
@@ -85,12 +85,12 @@ export default StyleSheet.create({
     textAlign: "center",
   },
   valorEstadistica: {
-    fontSize: 22, // <-- CAMBIO: 24 -> 22
+    fontSize: 22, 
     fontWeight: "bold",
     color: "#1e293b", 
     marginTop: 4,
   },
-  // ---------------------------------------------
+  
 
   contenidoPrincipal: {}, 
   tarjeta: {
@@ -138,7 +138,7 @@ export default StyleSheet.create({
   botonPrimario: {
     flex: 1, 
     backgroundColor: "#047857", 
-    padding: 10, // <-- CAMBIO: 12 -> 10
+    padding: 10, 
     borderRadius: 6,
     alignItems: "center", 
     elevation: 1, 
@@ -147,7 +147,7 @@ export default StyleSheet.create({
     flex: 1, 
     borderWidth: 1,
     borderColor: "#d1d5db", 
-    padding: 10, // <-- CAMBIO: 12 -> 10
+    padding: 10, 
     borderRadius: 6,
     alignItems: "center", 
     backgroundColor: "#fff", 

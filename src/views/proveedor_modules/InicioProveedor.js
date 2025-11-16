@@ -1,4 +1,4 @@
-// src/views/InicioProveedor.js
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -21,8 +21,8 @@ export default function InicioProveedor() {
 
   useEffect(() => {
     if (user) {
-      // Inicia el listener para pedidos pendientes
-      // (MODIFICADO: ahora llama a streamPedidosPendientes)
+      
+      
       const unsubscribe = PedidoService.streamPedidosPendientes(
         user.uid,
         (pedidosRecibidos) => {
@@ -31,7 +31,7 @@ export default function InicioProveedor() {
         }
       );
 
-      // Limpia el listener al desmontar el componente
+      
       return () => unsubscribe();
     }
   }, [user, loading]);
@@ -40,9 +40,9 @@ export default function InicioProveedor() {
     await signOut(auth);
   };
 
-  // --- (INICIO DE MODIFICACIÓN) ---
+  
   const handleUpdatePedido = async (pedido, nuevoEstado) => {
-    // 'nuevoEstado' será 'En proceso' o 'Rechazada'
+    
     const accion = nuevoEstado === 'En proceso' ? 'Aceptar' : 'Rechazar';
     
     Alert.alert(
@@ -58,15 +58,15 @@ export default function InicioProveedor() {
             if (!result.success) {
               Alert.alert("Error", result.error);
             }
-            // La lista se actualizará sola gracias al listener
+            
           },
         },
       ]
     );
   };
-  // --- (FIN DE MODIFICACIÓN) ---
+  
 
-  // Formatea la fecha Timestamp de Firestore
+  
   const formatFecha = (timestamp) => {
     if (!timestamp || !timestamp.toDate) return 'N/A';
     return timestamp.toDate().toLocaleDateString('es-ES', {

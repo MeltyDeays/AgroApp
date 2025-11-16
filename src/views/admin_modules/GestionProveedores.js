@@ -1,15 +1,15 @@
-// src/views/admin_modules/GestionProveedores.js
+
 import React, { useState, useEffect, useMemo, useRef } from 'react'; 
 import {
   View, Text, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator, FlatList, Platform, KeyboardAvoidingView
 } from 'react-native'; 
 import { Truck, ChevronLeft, ChevronDown, MoreVertical, Edit, Trash2, Search, ShoppingBag } from 'lucide-react-native';
-import { createProveedor, getAllProveedores, updateProveedor, deleteProveedor } from '../../services/proveedorService'; //
+import { createProveedor, getAllProveedores, updateProveedor, deleteProveedor } from '../../services/proveedorService'; 
 import { Picker } from '@react-native-picker/picker';
 import styles from '../../styles/adminStyles'; 
 
-// --- Formulario de Proveedores ---
-// (Este componente no cambia, se sigue usando para EDITAR)
+
+
 const ProveedorForm = ({ onBackToList, initialData = null }) => {
   const isEditing = !!initialData;
   const [formData, setFormData] = useState({
@@ -38,9 +38,9 @@ const ProveedorForm = ({ onBackToList, initialData = null }) => {
     if (isEditing) {
       const updateData = { ...formData };
       delete updateData.id;
-      result = await updateProveedor(initialData.id, updateData); //
+      result = await updateProveedor(initialData.id, updateData); 
     } else {
-      // Esta ruta ya no se usa, pero la dejamos por seguridad
+      
       result = { success: false, error: "La creación se maneja desde Gestión de Usuarios." };
     }
     setLoading(false);
@@ -80,7 +80,7 @@ const ProveedorForm = ({ onBackToList, initialData = null }) => {
       </View>
       <View style={styles.inputGroup}><Text style={styles.label}>Email (Opcional)</Text>
         <TextInput ref={emailRef} style={[styles.input, { backgroundColor: '#E5E7EB', color: '#6B7280' }]} autoCapitalize="none" keyboardType="email-address" onChangeText={(v) => handleChange('email', v)} value={formData.email} 
-          editable={false} // El email no se debe editar, es la cuenta
+          editable={false} 
         />
       </View>
       <View style={styles.inputGroup}><Text style={styles.label}>Dirección (Opcional)</Text>
@@ -105,7 +105,7 @@ const ProveedorForm = ({ onBackToList, initialData = null }) => {
   );
 };
 
-// --- Lista de Proveedores ---
+
 const ProveedorList = ({ onEditProveedor, onRealizarPedido, refreshKey }) => {
   const [proveedorList, setProveedorList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -115,7 +115,7 @@ const ProveedorList = ({ onEditProveedor, onRealizarPedido, refreshKey }) => {
 
   const fetchProveedores = async () => {
     setLoading(true);
-    try { const proveedores = await getAllProveedores(); setProveedorList(proveedores); } //
+    try { const proveedores = await getAllProveedores(); setProveedorList(proveedores); } 
     catch (error) { Alert.alert("Error", "No se pudo cargar la lista de proveedores."); }
     finally { setLoading(false); }
   };
@@ -138,9 +138,9 @@ const ProveedorList = ({ onEditProveedor, onRealizarPedido, refreshKey }) => {
     const isExpanded = expandedProveedorId === item.id;
     const toggleExpansion = () => setExpandedProveedorId(isExpanded ? null : item.id);
 
-    // --- (INICIO DE MODIFICACIÓN) ---
-    // La función handleDelete se elimina.
-    // --- (FIN DE MODIFICACIÓN) ---
+    
+    
+    
 
     return (
       <View style={styles.userItem}>
@@ -241,9 +241,9 @@ const ProveedorList = ({ onEditProveedor, onRealizarPedido, refreshKey }) => {
 };
 
 
-// --- Componente Principal del Módulo de Proveedores ---
+
 export default function GestionProveedores({ onNavigateToPedido }) {
-  const [viewMode, setViewMode] = useState('list'); // 'list', 'add', 'edit'
+  const [viewMode, setViewMode] = useState('list'); 
   const [refreshKey, setRefreshKey] = useState(0);
   const [editingProveedor, setEditingProveedor] = useState(null);
 
@@ -260,20 +260,20 @@ export default function GestionProveedores({ onNavigateToPedido }) {
     }
   };
 
-  // --- (INICIO DE MODIFICACIÓN) ---
-  // Se elimina el 'viewMode === 'add''
-  // if (viewMode === 'add') {
-  //   return <ProveedorForm onBackToList={handleBackToList} />;
-  // }
-  // --- (FIN DE MODIFICACIÓN) ---
+  
+  
+  
+  
+  
+  
 
   if (viewMode === 'edit') {
     return <ProveedorForm onBackToList={handleBackToList} initialData={editingProveedor} />;
   }
   return <ProveedorList
-            // onGoToAddForm={() => setViewMode('add')} // <-- Se elimina esta prop
+            
             onEditProveedor={handleEditProveedor}
-            onRealizarPedido={onNavigateToPedido} //
+            onRealizarPedido={onNavigateToPedido} 
             refreshKey={refreshKey}
           />;
 }

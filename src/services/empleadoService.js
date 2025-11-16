@@ -2,7 +2,7 @@ import { collection, getDocs, query, orderBy, doc, setDoc, updateDoc, deleteDoc,
 import { db } from '../../firebaseConfig'; 
 
 const empleadosCollection = collection(db, "empleados");
-const usuariosCollection = collection(db, "usuarios"); // Necesario para mantener sincronización
+const usuariosCollection = collection(db, "usuarios"); 
 
 /**
  * Registra un nuevo documento en la colección 'empleados'. 
@@ -19,7 +19,7 @@ export const createEmpleado = async (userData) => {
             cedula: cedula,
             edad: edad,
             rol: rol,
-            sectorId: null, // Inicialmente nulo
+            sectorId: null, 
             fechaCreacion: new Date(),
         });
         return { success: true };
@@ -56,14 +56,14 @@ export const updateEmpleado = async (uid, updatedData) => {
         throw new Error("UID de empleado y datos son requeridos.");
     }
     try {
-        // 1. Actualizar la colección 'empleados' (principal)
+        
         const empleadoDocRef = doc(db, "empleados", uid);
         await updateDoc(empleadoDocRef, updatedData);
         
-        // 2. Sincronizar sectorId en la colección 'usuarios' (mantener integridad)
+        
         const userDocRef = doc(db, "usuarios", uid);
         await updateDoc(userDocRef, {
-            sectorId: updatedData.sectorId || null // Aseguramos que se sincronice el campo
+            sectorId: updatedData.sectorId || null 
         });
 
         return { success: true };
@@ -91,7 +91,7 @@ export const deleteEmpleado = async (uid) => {
     }
 };
 
-// Función de utilidad para obtener un solo empleado por UID
+
 export const getEmpleadoByUid = async (uid) => {
     try {
         const docRef = doc(db, "empleados", uid);

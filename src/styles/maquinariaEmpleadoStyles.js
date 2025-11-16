@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-// Colores base (puedes moverlos a un archivo global)
+
 const COLORES = {
   verde: '#10B981',
   azul: '#2563EB',
@@ -100,7 +100,7 @@ export default StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 12,
-    overflow: 'hidden', // para iOS
+    overflow: 'hidden', 
   },
   badgeText: {
     color: COLORES.blanco,
@@ -147,7 +147,7 @@ export default StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
-  // Dialogo Modal
+  
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -209,7 +209,7 @@ export default StyleSheet.create({
     backgroundColor: COLORES.fondo,
   },
 
-  // --- (Estilos del reporte de falla) ---
+  
 
   buttonReport: {
     backgroundColor: COLORES.blanco,
@@ -255,7 +255,7 @@ export default StyleSheet.create({
     marginBottom: 8,
   },
 
-  // --- (NUEVOS ESTILOS PARA IMAGEN EN MODAL) ---
+  
   modalImagePreview: {
     height: 100,
     width: '100%',
@@ -275,9 +275,9 @@ export default StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 16,
   },
-  // ... (todos tus estilos existentes) ...
+  
 
-  // --- (NUEVOS ESTILOS PARA FILTROS) ---
+  
   filterContainer: {
     paddingVertical: 16,
   },
@@ -288,7 +288,7 @@ export default StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 14,
-    backgroundColor: COLORES.blanco, // Fondo blanco en esta vista
+    backgroundColor: COLORES.blanco, 
     marginBottom: 12,
   },
   pickerContainer: {
@@ -297,7 +297,7 @@ export default StyleSheet.create({
     borderRadius: 8,
     backgroundColor: COLORES.blanco,
     marginBottom: 12,
-    overflow: 'hidden', // Para Android
+    overflow: 'hidden', 
   },
   picker: {
     height: 44,
@@ -308,7 +308,7 @@ export default StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
-    marginBottom: 12, // Espacio antes de la lista
+    marginBottom: 12, 
   },
   sortButton: {
     flex: 1,
@@ -322,8 +322,8 @@ export default StyleSheet.create({
     borderRadius: 8,
   },
   sortButtonActive: {
-    borderColor: COLORES.verde, // Color primario de empleado
-    backgroundColor: '#F0FDF4', // Fondo verde claro
+    borderColor: COLORES.verde, 
+    backgroundColor: '#F0FDF4', 
   },
   sortButtonText: {
     fontSize: 14,
@@ -331,11 +331,11 @@ export default StyleSheet.create({
     marginLeft: 8,
   },
 
-  // --- (NUEVO) Estilos para Maquinaria Asignada ---
+  
   assignedContainer: {
     marginBottom: 24,
     padding: 16,
-    backgroundColor: '#E0F2FE', // Un fondo azul claro para destacar
+    backgroundColor: '#E0F2FE', 
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#7DD3FC',
@@ -343,7 +343,7 @@ export default StyleSheet.create({
   assignedTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#0369A1', // Azul oscuro
+    color: '#0369A1', 
     marginBottom: 16,
   },
   assignedCard: {
@@ -378,7 +378,7 @@ export default StyleSheet.create({
     marginBottom: 8,
   },
   buttonComplete: {
-    backgroundColor: '#3B82F6', // Azul para la acción principal de esta sección
+    backgroundColor: '#3B82F6', 
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',

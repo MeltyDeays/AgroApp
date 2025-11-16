@@ -1,4 +1,4 @@
-// src/views/InicioAdministrador.js
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, useWindowDimensions, SafeAreaView, ScrollView, Animated, Pressable, Alert
@@ -8,9 +8,9 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig'; 
 import styles from '../styles/adminStyles'; 
 
-// --- Importar Módulos y Campana ---
+
 import GestionUsuarios from './admin_modules/GestionUsuarios';
-// --- NUEVA IMPORTACIÓN ---
+
 import GestionEmpleados from './admin_modules/GestionEmpleados'; 
 import GestionProveedores from './admin_modules/GestionProveedores';
 import GestionCompras from './admin_modules/GestionCompras';
@@ -23,14 +23,14 @@ import MapaFinca from './admin_modules/MapaFinca';
 import GestionSectores from './admin_modules/GestionSectores'; 
 
 
-// --- Componente Sidebar (Modificado para incluir GestionEmpleados) ---
+
 const AppSidebar = ({ activeModule, setActiveModule, onComprasClick, navigation }) => { 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, action: () => setActiveModule('dashboard') },
     { id: 'usuarios', label: 'Usuarios', icon: Users, action: () => setActiveModule('usuarios') },
-    // --- Nuevo Módulo de Empleados ---
+    
     { id: 'empleados', label: 'Empleados', icon: Users, action: () => setActiveModule('empleados') }, 
-    // ---------------------------------
+    
     { id: 'productos', label: 'Productos', icon: Package, action: () => setActiveModule('productos') },
     { id: 'asistencia', label: 'Asistencia', icon: Clock, action: () => setActiveModule('asistencia') },
     { id: 'proveedores', label: 'Proveedores', icon: Truck, action: () => setActiveModule('proveedores') },
@@ -40,8 +40,8 @@ const AppSidebar = ({ activeModule, setActiveModule, onComprasClick, navigation 
     { id: 'mapa', label: 'Ver Mapa Finca', icon: Map, action: () => navigation.navigate('MapaFinca') },
   ];
   
-  // Reutilizamos el icono de Usuarios para Empleados, pero debería ser diferente si desea claridad.
-  // Para este ejemplo, lo dejé en Users para ambos. Si desea un ícono diferente, cámbielo.
+  
+  
   const getIcon = (id, Icon) => {
     if (id === 'empleados') return <Users color={activeModule === id ? '#2563eb' : '#4b5563'} size={20} />;
     return <Icon color={activeModule === id ? '#2563eb' : '#4b5563'} size={20} />;
@@ -60,7 +60,7 @@ const AppSidebar = ({ activeModule, setActiveModule, onComprasClick, navigation 
   );
 };
 
-// --- Componente Principal ---
+
 export default function InicioAdministrador({ navigation }) { 
   const user = auth.currentUser;
   const [activeModule, setActiveModule] = useState('dashboard');
@@ -95,14 +95,14 @@ export default function InicioAdministrador({ navigation }) {
     if (!isLargeScreen) { setSidebarOpen(false); }
   };
 
-  // --- renderModule ACTUALIZADO ---
+  
   const renderModule = () => {
     switch (activeModule) {
       case 'dashboard':
         return <ScrollView contentContainerStyle={{ flexGrow: 1 }}><Dashboard /></ScrollView>;
       case 'usuarios':
         return <GestionUsuarios />;
-      case 'empleados': // <-- Nuevo módulo
+      case 'empleados': 
         return <GestionEmpleados />;
       case 'productos':
         return <ScrollView contentContainerStyle={{ flexGrow: 1 }}><Productos /></ScrollView>;
@@ -120,7 +120,7 @@ export default function InicioAdministrador({ navigation }) {
         return <ScrollView contentContainerStyle={{ flexGrow: 1 }}><Dashboard /></ScrollView>;
     }
   };
-  // ------------------------------------
+  
 
   const handleLogout = async () => {
     try {
@@ -131,7 +131,7 @@ export default function InicioAdministrador({ navigation }) {
     }
   };
 
-  // Memoized Sidebar Content (Modificado)
+  
   const sidebarContent = useMemo(() => (
     <AppSidebar
       activeModule={activeModule}

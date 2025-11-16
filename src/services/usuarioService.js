@@ -1,9 +1,9 @@
-// src/services/usuarioService.js
+
 import { collection, getDocs, query, orderBy, doc, setDoc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore'; 
 import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import { initializeApp, getApp } from 'firebase/app';
 import { db, auth } from '../../firebaseConfig'; 
-import { createEmpleado } from './empleadoService'; // <-- IMPORTADO
+import { createEmpleado } from './empleadoService'; 
 
 const usuariosCollection = collection(db, "usuarios");
 const proveedoresCollection = collection(db, "proveedores"); 
@@ -14,10 +14,10 @@ const proveedoresCollection = collection(db, "proveedores");
  * El campo 'sector' ahora es 'sectorId' para empleados (y es opcional al crear).
  */
 export const registerEmployee = async (formData) => {
-    // Sector (viejo campo) se renombra a sectorId y no es obligatorio al registrar
+    
     const { email, password, nombres, apellidos, cedula, edad, rol } = formData; 
 
-    // Validación simple
+    
     if (!email || !password || !nombres || !apellidos || !rol || !cedula || !edad) {
         return { success: false, error: "Faltan datos obligatorios (Nombres, Apellidos, Email, Contraseña, Cédula, Edad, Rol)." };
     }
@@ -35,8 +35,8 @@ export const registerEmployee = async (formData) => {
         const user = userCredential.user;
         const userId = user.uid;
 
-        // 1. Guarda la información detallada en Firestore ('usuarios')
-        // Ya no guardamos "sector" aquí si es empleado, solo la metadata general.
+        
+        
         await setDoc(doc(db, "usuarios", userId), {
             uid: userId,
             nombres: nombres,
@@ -44,14 +44,14 @@ export const registerEmployee = async (formData) => {
             email: email,
             cedula: cedula,
             edad: edad,
-            // sectorId es null por defecto y se asigna en la gestión de empleados/sectores
+            
             sectorId: null, 
             rol: rol,
             role: rol, 
             fechaCreacion: new Date(),
         });
 
-        // 2. Crea documentos espejo específicos por rol
+        
         if (rol === 'proveedor') {
             await setDoc(doc(db, "proveedores", userId), {
                 id: userId, 
@@ -66,7 +66,7 @@ export const registerEmployee = async (formData) => {
         }
         
         if (rol === 'empleado') {
-            // Usa el nuevo servicio de empleados para crear el espejo
+            
             await createEmpleado({ uid: userId, nombres, apellidos, email, cedula, edad, rol });
         }
 
@@ -117,17 +117,17 @@ export const updateUser = async (userId, updatedData) => {
         delete updatedData.uid;
         delete updatedData.id;
         delete updatedData.fechaCreacion;
-        delete updatedData.sector; // Se elimina el campo antiguo 'sector'
+        delete updatedData.sector; 
 
-        // Sincroniza 'rol' y 'role'
+        
         if(updatedData.rol) updatedData.role = updatedData.rol;
         if(updatedData.role) updatedData.rol = updatedData.rol;
 
         await updateDoc(userDocRef, updatedData);
         
-        // Si el rol cambia a 'empleado', crea el espejo (si no existe)
+        
         if (updatedData.rol === 'empleado') {
-             // Intenta obtener el documento de empleado; si no existe, lo crea.
+             
              const empleadoDoc = await getDoc(doc(db, "empleados", userId));
              if (!empleadoDoc.exists()) {
                  const userData = (await getDoc(userDocRef)).data();
@@ -157,16 +157,16 @@ export const deleteUser = async (userId) => {
         if (userDoc.exists()) {
             const userData = userDoc.data();
 
-            // 1. Borrar el documento de 'usuarios'
+            
             await deleteDoc(userDocRef);
 
-            // 2. Si era proveedor, borramos también el de 'proveedores'
+            
             if (userData && (userData.rol === 'proveedor' || userData.role === 'proveedor')) {
                 const proveedorDocRef = doc(db, "proveedores", userId);
                 await deleteDoc(proveedorDocRef);
             }
             
-            // 3. Si era empleado, borramos el de 'empleados'
+            
             if (userData && (userData.rol === 'empleado' || userData.role === 'empleado')) {
                 const empleadoDocRef = doc(db, "empleados", userId);
                 const empleadoSnap = await getDoc(empleadoDocRef);

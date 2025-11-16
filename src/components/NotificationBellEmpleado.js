@@ -1,5 +1,5 @@
-// src/components/NotificationBellEmpleado.js
-import React, { useState, useEffect, useMemo } from 'react'; // <-- AÑADIDO useMemo
+
+import React, { useState, useEffect, useMemo } from 'react'; 
 import {
   View,
   Text,
@@ -8,23 +8,23 @@ import {
   SafeAreaView,
   FlatList,
   StyleSheet,
-  Alert, // <-- AÑADIDO
+  Alert, 
 } from 'react-native';
-// --- AÑADIDO: UserCheck, XCircle ---
+
 import { Bell, X, Info, CheckCircle, AlertCircle, UserCheck, XCircle } from 'lucide-react-native';
 import { auth } from '../../firebaseConfig';
 import * as MaquinariaService from '../services/maquinariaService';
-import * as MapaService from '../services/mapaService'; // <-- AÑADIDO
+import * as MapaService from '../services/mapaService'; 
 
 export default function NotificationBellEmpleado() {
   const [modalVisible, setModalVisible] = useState(false);
-  const [maquinariaNotifications, setMaquinariaNotifications] = useState([]); // <-- Renombrado
-  const [supervisorRequests, setSupervisorRequests] = useState([]); // <-- AÑADIDO
+  const [maquinariaNotifications, setMaquinariaNotifications] = useState([]); 
+  const [supervisorRequests, setSupervisorRequests] = useState([]); 
   const user = auth.currentUser;
 
   useEffect(() => {
     if (user) {
-      // 1. Listener para notificaciones de maquinaria
+      
       const unsubscribeMaquinaria = MaquinariaService.streamNotificacionesEmpleado(
         user.uid,
         (notifs) => {
@@ -32,7 +32,7 @@ export default function NotificationBellEmpleado() {
         }
       );
       
-      // --- AÑADIDO: 2. Listener para solicitudes de supervisor ---
+      
       const unsubscribeSupervisor = MapaService.streamSupervisorRequests(
         user.uid,
         (solicitudes) => {
@@ -42,15 +42,15 @@ export default function NotificationBellEmpleado() {
 
       return () => {
         unsubscribeMaquinaria();
-        unsubscribeSupervisor(); // <-- Limpiar
+        unsubscribeSupervisor(); 
       };
     }
   }, [user]);
 
-  // --- AÑADIDO: Combinar todas las notificaciones ---
+  
   const allNotifications = useMemo(() => {
     const combined = [...maquinariaNotifications, ...supervisorRequests];
-    // Ordenar por fecha, más nuevas primero
+    
     combined.sort((a, b) => {
       const dateA = a.createdAt?.toDate() || a.fechaCreacion?.toDate() || 0;
       const dateB = b.createdAt?.toDate() || b.fechaCreacion?.toDate() || 0;
@@ -61,9 +61,9 @@ export default function NotificationBellEmpleado() {
 
 
   const unreadCount = useMemo(() => {
-    // Contar notificaciones de maquinaria no leídas
+    
     const unreadMaquinaria = maquinariaNotifications.filter(n => !n.read).length;
-    // Solicitudes de supervisor siempre cuentan como "no leídas" hasta ser respondidas
+    
     const unreadSupervisor = supervisorRequests.length; 
     return unreadMaquinaria + unreadSupervisor;
   }, [maquinariaNotifications, supervisorRequests]);
@@ -71,21 +71,21 @@ export default function NotificationBellEmpleado() {
 
   const openModal = () => {
     setModalVisible(true);
-    // Marcar solo las de maquinaria como leídas al abrir
+    
     maquinariaNotifications.forEach(notif => {
-      if (!notif.read && !notif.notificationType) { // Asegura no marcar las de supervisor
+      if (!notif.read && !notif.notificationType) { 
         MaquinariaService.marcarNotificacionLeida(notif.id);
       }
     });
   };
 
-  // --- AÑADIDO: Manejador para responder a la solicitud ---
+  
   const handleResponderSolicitud = async (solicitud, aceptar) => {
     const accion = aceptar ? "aceptada" : "rechazada";
     try {
       await MapaService.responderSolicitudSupervisor(solicitud, aceptar);
       Alert.alert("Éxito", `Solicitud ${accion} correctamente.`);
-      // La lista se actualizará sola gracias al listener
+      
     } catch (error) {
       Alert.alert("Error", error.message);
     }
@@ -99,7 +99,7 @@ export default function NotificationBellEmpleado() {
     if (type === 'error') {
       return <AlertCircle size={24} color="#EF4444" />;
     }
-    // --- AÑADIDO: Icono para solicitud de supervisor ---
+    
     if (type === 'supervisorRequest') {
       return <UserCheck size={24} color="#2563EB" />;
     }
@@ -108,7 +108,7 @@ export default function NotificationBellEmpleado() {
 
   const renderNotifItem = ({ item }) => {
     
-    // --- AÑADIDO: Renderizado para Solicitud de Supervisor ---
+    
     if (item.notificationType === 'supervisorRequest') {
       return (
         <View style={[styles.notifCard, styles.notifUnread, {borderColor: '#93C5FD'}]}>
@@ -143,7 +143,7 @@ export default function NotificationBellEmpleado() {
       );
     }
 
-    // Renderizado normal (Maquinaria)
+    
     return (
       <View style={[styles.notifCard, !item.read && styles.notifUnread]}>
         <View style={styles.notifIcon}>{getIcon(item.type)}</View>
@@ -182,7 +182,7 @@ export default function NotificationBellEmpleado() {
             </TouchableOpacity>
           </View>
           <FlatList
-            data={allNotifications} // <-- Usar la lista combinada
+            data={allNotifications} 
             renderItem={renderNotifItem}
             keyExtractor={(item) => item.id}
             ListEmptyComponent={
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   notifMessage: { fontSize: 14, color: '#4B5563', marginTop: 4 },
   notifTime: { fontSize: 12, color: '#9CA3AF', marginTop: 8 },
   
-  // --- AÑADIDOS: Estilos para botones de acción ---
+  
   actionRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -246,10 +246,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   rejectButton: {
-    backgroundColor: '#EF4444', // Rojo
+    backgroundColor: '#EF4444', 
   },
   acceptButton: {
-    backgroundColor: '#10B981', // Verde
+    backgroundColor: '#10B981', 
   },
   actionButtonText: {
     color: '#FFFFFF',

@@ -1,4 +1,4 @@
-// src/services/pedidoProveedorService.js
+
 import {
   collection,
   query,
@@ -51,7 +51,7 @@ export const actualizarEstadoPedido = async (pedidoId, nuevoEstado) => {
     
     await updateDoc(pedidoDocRef, {
       estado: nuevoEstado,
-      adminNotificado: false // Avisa al admin que hay una respuesta
+      adminNotificado: false 
     });
     
     return { success: true };
@@ -68,20 +68,20 @@ export const actualizarEstadoPedido = async (pedidoId, nuevoEstado) => {
 export const crearPedidoProveedor = async (pedidoData) => {
     try {
         const docRef = await addDoc(pedidosCollection, {
-            // --- (INICIO DE MODIFICACIÓN) ---
+            
             idAdmin: pedidoData.idAdmin,
             nombreAdmin: pedidoData.nombreAdmin,
             idProveedor: pedidoData.idProveedor,
-            nombreProveedor: pedidoData.nombreProveedor, // <-- AÑADIDO
+            nombreProveedor: pedidoData.nombreProveedor, 
             nombreProducto: pedidoData.nombreProducto,
             cantidad: pedidoData.cantidad,
             unidad: pedidoData.unidad,
-            items: pedidoData.items, // <-- AÑADIDO (Descripción detallada)
-            deposito_area: pedidoData.deposito_area, // <-- AÑADIDO
+            items: pedidoData.items, 
+            deposito_area: pedidoData.deposito_area, 
             fechaRequerida: pedidoData.fechaRequerida,
-            // --- (FIN DE MODIFICACIÓN) ---
+            
             estado: 'En espera',
-            adminNotificado: true, // El admin ya sabe, no necesita notificación
+            adminNotificado: true, 
             fechaCreacion: Timestamp.now(),
         });
         
@@ -128,7 +128,7 @@ export const streamRespuestasProveedor = (adminId, callback) => {
     pedidosCollection,
     where("idAdmin", "==", adminId),
     where("adminNotificado", "==", false),
-    where("estado", "!=", "En espera") // Busca 'En proceso' o 'Rechazada'
+    where("estado", "!=", "En espera") 
   );
 
   return onSnapshot(q, (querySnapshot) => {
@@ -164,6 +164,6 @@ export const marcarPedidoRecibido = (pedidoId) => {
   const pedidoDocRef = doc(db, "pedidosProveedor", pedidoId);
   return updateDoc(pedidoDocRef, {
     estado: 'Recibido',
-    adminNotificado: true // Marcar como visto también
+    adminNotificado: true 
   });
 };

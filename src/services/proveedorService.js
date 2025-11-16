@@ -1,9 +1,9 @@
-// src/services/proveedorService.js
+
 
 import { collection, getDocs, query, orderBy, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 
-// Referencia a la colección de proveedores en Firestore 
+
 const proveedoresCollection = collection(db, "proveedores");
 
 /**
@@ -13,24 +13,24 @@ const proveedoresCollection = collection(db, "proveedores");
 export const createProveedor = async (formData) => {
     const { nombreEmpresa, contacto, telefono, email, direccion, productos_suministrados } = formData;
 
-    // Validación simple
+    
     if (!nombreEmpresa || !contacto || !telefono) {
         return { success: false, error: "Nombre de empresa, contacto y teléfono son obligatorios." };
     }
 
     try {
-        // Creamos una referencia a un nuevo documento
+        
         const newProveedorRef = doc(proveedoresCollection);
         
-        // Usamos setDoc para guardar el nuevo proveedor con el ID generado
+        
         await setDoc(newProveedorRef, {
-            id: newProveedorRef.id, // Guardamos el ID dentro del documento
+            id: newProveedorRef.id, 
             nombreEmpresa: nombreEmpresa,
             contacto: contacto,
             telefono: telefono,
-            email: email || '', // Campo opcional
-            direccion: direccion || '', // Campo opcional
-            productos_suministrados: productos_suministrados || '', // Campo opcional
+            email: email || '', 
+            direccion: direccion || '', 
+            productos_suministrados: productos_suministrados || '', 
             fechaCreacion: new Date(),
         });
 
@@ -47,7 +47,7 @@ export const createProveedor = async (formData) => {
  */
 export const getAllProveedores = async () => {
     try {
-        // Usamos 'nombreEmpresa' para ordenar
+        
         const q = query(proveedoresCollection, orderBy("nombreEmpresa", "asc"));
         const querySnapshot = await getDocs(q);
 
@@ -73,7 +73,7 @@ export const updateProveedor = async (proveedorId, updatedData) => {
     try {
         const proveedorDocRef = doc(db, "proveedores", proveedorId);
         
-        // Previene la actualización de campos inmutables
+        
         delete updatedData.id;
         delete updatedData.fechaCreacion;
 

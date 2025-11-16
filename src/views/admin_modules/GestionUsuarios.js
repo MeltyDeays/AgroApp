@@ -1,14 +1,14 @@
-// src/views/admin_modules/GestionUsuarios.js
+
 import React, { useState, useEffect, useMemo, useRef } from 'react'; 
 import {
   View, Text, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator, FlatList, Platform, KeyboardAvoidingView
 } from 'react-native'; 
 import { UserPlus, ChevronLeft, ChevronDown, MoreVertical, Edit, Trash2, Search } from 'lucide-react-native';
-import { registerEmployee, getAllUsers, updateUser, deleteUser } from '../../services/usuarioService'; //
+import { registerEmployee, getAllUsers, updateUser, deleteUser } from '../../services/usuarioService'; 
 import { Picker } from '@react-native-picker/picker';
 import styles from '../../styles/adminStyles'; 
 
-// --- Formulario de Usuarios ---
+
 const UserForm = ({ onBackToList, initialData = null }) => {
   const isEditing = !!initialData;
   const [formData, setFormData] = useState({
@@ -18,8 +18,8 @@ const UserForm = ({ onBackToList, initialData = null }) => {
     password: '',
     cedula: initialData?.cedula || '',
     edad: initialData?.edad || '',
-    // Se elimina el campo 'sector' para el registro inicial de empleados
-    sector: initialData?.sector || (initialData?.rol === 'empleado' ? '' : 'Bodega Principal'), // Usar valor por defecto si no es empleado
+    
+    sector: initialData?.sector || (initialData?.rol === 'empleado' ? '' : 'Bodega Principal'), 
     rol: initialData?.rol || 'empleado',
   });
   const [loading, setLoading] = useState(false);
@@ -43,12 +43,12 @@ const UserForm = ({ onBackToList, initialData = null }) => {
       if (!updateData.password) delete updateData.password;
       delete updateData.email;
       
-      // Si el rol es empleado, eliminamos el campo 'sector' para no guardarlo en 'usuarios'
+      
       if (updateData.rol === 'empleado') delete updateData.sector;
 
       result = await updateUser(initialData.id, updateData); 
     } else {
-      // Si el rol es empleado, el campo 'sector' no se usa para el registro inicial
+      
       if (formData.rol === 'empleado') {
         const dataToRegister = { ...formData };
         delete dataToRegister.sector; 
@@ -66,7 +66,7 @@ const UserForm = ({ onBackToList, initialData = null }) => {
     }
   };
   
-  // Condición para mostrar el campo 'Sector'
+  
   const isSectorRequired = formData.rol !== 'empleado' && formData.rol !== 'proveedor';
 
   return (
@@ -159,7 +159,7 @@ const UserForm = ({ onBackToList, initialData = null }) => {
   );
 };
 
-// ... (El componente UserList se mantiene igual para la gestión de usuarios NO-empleados)
+
 
 const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
   const [userList, setUserList] = useState([]);
@@ -332,7 +332,7 @@ const UserList = ({ onGoToAddForm, onEditUser, refreshKey }) => {
   );
 };
 
-// --- Componente Principal del Módulo de Usuarios ---
+
 export default function GestionUsuarios() {
   const [viewMode, setViewMode] = useState('list'); 
   const [refreshKey, setRefreshKey] = useState(0);

@@ -8,14 +8,14 @@ import {
   Timestamp,
   orderBy,
 } from "firebase/firestore";
-// --- AÑADIDO: Importar 'doc' para la búsqueda de usuarios ---
-import { db } from "../../firebaseConfig"; // Asegúrate que db se exporta correctamente
+
+import { db } from "../../firebaseConfig"; 
 
 const asistenciaCollection = collection(db, "asistencia");
-// --- AÑADIDO: Referencia a la colección de usuarios ---
+
 const usuariosCollection = collection(db, "usuarios");
 
-// registrarEntradaSalida (sin cambios)
+
 export const registrarEntradaSalida = async (codigoEmpleado, esEntrada) => {
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
@@ -63,7 +63,7 @@ export const registrarEntradaSalida = async (codigoEmpleado, esEntrada) => {
   }
 };
 
-// obtenerHistorialEmpleado (sin cambios)
+
 export const obtenerHistorialEmpleado = async (idEmpleado, fechaInicio, fechaFin) => {
   const q = query(
     asistenciaCollection,
@@ -77,20 +77,20 @@ export const obtenerHistorialEmpleado = async (idEmpleado, fechaInicio, fechaFin
 };
 
 
-// --- FUNCIÓN ACTUALIZADA ---
-// Ahora cruza datos con la colección 'usuarios'
+
+
 export const obtenerRegistrosAsistencia = async () => {
   try {
-    // 1. Obtener todos los usuarios y crear un mapa UID -> Nombre
+    
     const usuariosSnapshot = await getDocs(usuariosCollection);
     const userMap = {};
     usuariosSnapshot.forEach((doc) => {
       const userData = doc.data();
-      // Usamos UID como clave y combinamos nombres y apellidos
+      
       userMap[userData.uid] = `${userData.nombres || ''} ${userData.apellidos || ''}`.trim();
     });
 
-    // 2. Obtener los registros de asistencia de hoy
+    
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
     const manana = new Date(hoy);
@@ -105,17 +105,17 @@ export const obtenerRegistrosAsistencia = async () => {
 
     const asistenciaSnapshot = await getDocs(q);
 
-    // 3. Combinar los datos
+    
     const registrosCombinados = asistenciaSnapshot.docs.map((doc) => {
       const asistenciaData = doc.data();
       const empleadoId = asistenciaData.id_empleado;
-      // Busca el nombre en el mapa, si no existe, usa el ID
+      
       const nombreEmpleado = userMap[empleadoId] || empleadoId; 
       
       return { 
         id: doc.id, 
         ...asistenciaData, 
-        nombreEmpleado: nombreEmpleado // <-- Nuevo campo añadido
+        nombreEmpleado: nombreEmpleado 
       };
     });
 
@@ -123,6 +123,6 @@ export const obtenerRegistrosAsistencia = async () => {
 
   } catch (error) {
       console.error("Error al obtener registros de asistencia:", error);
-      throw new Error("No se pudo cargar la lista de asistencia."); // Lanza error para manejo en UI
+      throw new Error("No se pudo cargar la lista de asistencia."); 
   }
 };

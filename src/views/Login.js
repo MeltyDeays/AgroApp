@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'; // --- AÑADIDO: useRef ---
+import React, { useState, useRef } from 'react'; 
 import {
   View,
   Text,
@@ -11,20 +11,20 @@ import {
   Keyboard,
   Platform,
 } from 'react-native';
-// --- CORRECCIÓN: Se eliminan Shield y User ---
+
 import { Sprout } from 'lucide-react-native'; 
 import { loginUser } from '../services/authService'; 
 import styles from '../styles/loginStyles'; 
 
-// --- CORRECCIÓN: Se elimina el componente TabButton ---
+
 
 export default function Login() {
-  // --- CORRECCIÓN: Se elimina el estado activeTab ---
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // --- AÑADIDO: Ref para el campo de contraseña ---
+  
   const passwordRef = useRef(null);
 
   const handleLogin = async () => {
@@ -33,11 +33,11 @@ export default function Login() {
     if (!result.success) {
       Alert.alert('Error de Inicio de Sesión', result.error);
     }
-    // Si tiene éxito, el listener en App.js se encarga de todo.
+    
     setLoading(false);
   };
 
-  // --- CORRECCIÓN: Se simplifica el contenido del formulario ---
+  
   const renderFormContent = () => {
     return (
       <>
@@ -56,12 +56,12 @@ export default function Login() {
             style={styles.input}
             value={email}
             onChangeText={setEmail}
-            placeholder="correo@ejemplo.com" // Placeholder genérico
+            placeholder="correo@ejemplo.com" 
             keyboardType="email-address"
             autoCapitalize="none"
-            returnKeyType="next" // --- AÑADIDO ---
-            onSubmitEditing={() => passwordRef.current?.focus()} // --- AÑADIDO ---
-            blurOnSubmit={false} // --- AÑADIDO ---
+            returnKeyType="next" 
+            onSubmitEditing={() => passwordRef.current?.focus()} 
+            blurOnSubmit={false} 
             placeholderTextColor="#9CA3AF"
           />
         </View>
@@ -69,14 +69,14 @@ export default function Login() {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Contraseña</Text>
           <TextInput
-            ref={passwordRef} // --- AÑADIDO ---
+            ref={passwordRef} 
             style={styles.input}
             value={password}
             onChangeText={setPassword}
             placeholder="••••••••"
             secureTextEntry
-            returnKeyType="done" // --- AÑADIDO ---
-            onSubmitEditing={handleLogin} // --- AÑADIDO ---
+            returnKeyType="done" 
+            onSubmitEditing={handleLogin} 
             placeholderTextColor="#9CA3AF"
           />
         </View>

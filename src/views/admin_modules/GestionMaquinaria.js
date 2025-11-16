@@ -1,4 +1,4 @@
-// src/views/admin_modules/GestionMaquinaria.js
+
 import React, {
   useState,
   useEffect,
@@ -42,20 +42,20 @@ import {
 } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-// --- Estilos ---
+
 import styles from "../../styles/maquinariaAdminStyles";
 import formStyles from "../../styles/adminStyles";
-// --- Servicios ---
+
 import * as MaquinariaService from "../../services/maquinariaService";
-import { useUsers } from "../../context/UserContext"; // <-- IMPORTAR
-// --- Constantes ---
+import { useUsers } from "../../context/UserContext"; 
+
 import {
   TIPOS_MAQUINARIA,
   FILTRO_TIPOS_MAQUINARIA,
   FILTRO_ESTADOS_MAQUINARIA,
 } from "../../constants/maquinariaConstants";
 
-// --- Formulario (Sin cambios) ---
+
 const MachineForm = React.memo(
   ({ onBackToList, initialData = null }) => {
     const isEditing = useMemo(() => !!initialData, [initialData]);
@@ -219,7 +219,7 @@ const MachineForm = React.memo(
   }
 );
 
-// --- Pestaña Flota (Tu 'MachineryTab' renombrada) ---
+
 const FlotaTab = React.memo(
   ({
     machines,
@@ -239,7 +239,7 @@ const FlotaTab = React.memo(
     sortOrder,
     setSortOrder,
   }) => {
-    const { getUserFullName } = useUsers(); // <-- USAR EL HOOK
+    const { getUserFullName } = useUsers(); 
 
     const renderItem = useCallback(
       ({ item: machine }) => {
@@ -508,10 +508,10 @@ const FlotaTab = React.memo(
   }
 );
 
-// --- Pestaña Solicitudes (Corregida de la vez anterior) ---
+
 const SolicitudesTab = React.memo(
   ({ requests, machines, onApprove, onReject }) => {
-    const { getUserFullName } = useUsers(); // <-- USAR EL HOOK
+    const { getUserFullName } = useUsers(); 
 
     const stats = useMemo(
       () => ({
@@ -603,9 +603,9 @@ const SolicitudesTab = React.memo(
   }
 );
 
-// --- Pestaña Mantenimiento (Sin cambios) ---
+
 const MaintenanceTab = React.memo(({ machines, requests, onUpdate }) => {
-  // ... (Tu código de MaintenanceTab no cambia) ...
+  
   const renderItem = useCallback(
     ({ item: request }) => {
       const machine = machines.find((m) => m.id === request.machineId);
@@ -704,7 +704,7 @@ const MaintenanceTab = React.memo(({ machines, requests, onUpdate }) => {
   );
 });
 
-// --- Componente Principal (MODIFICADO) ---
+
 export default function GestionMaquinaria() {
   const [viewMode, setViewMode] = useState("list");
   const [editingMachine, setEditingMachine] = useState(null);
@@ -743,7 +743,7 @@ export default function GestionMaquinaria() {
   const [datePickerField, setDatePickerField] = useState(null);
   const [tempDate, setTempDate] = useState(new Date());
 
-  // useEffect para datos en tiempo real (CORREGIDO)
+  
   useEffect(() => {
     setLoading(true);
 
@@ -761,22 +761,22 @@ export default function GestionMaquinaria() {
       }
     );
     
-    // Ocultar el indicador de carga después de un tiempo prudencial,
-    // ya que los streams pueden no devolver datos inmediatamente si no hay.
+    
+    
     const timer = setTimeout(() => {
       setLoading(false);
     }, 1500);
 
-    // Función de limpieza para desuscribirse de los listeners
+    
     return () => {
       unsubMachines();
       unsubReservas();
       unsubManten();
       clearTimeout(timer);
     };
-  }, []); // El array vacío asegura que esto se ejecute solo una vez (al montar)
+  }, []); 
 
-  // Lógica de Filtro (Sin cambios)
+  
   const filteredMachines = useMemo(() => {
     let machinesToShow = [...machines];
     if (searchQuery) {
@@ -800,7 +800,7 @@ export default function GestionMaquinaria() {
     return machinesToShow;
   }, [machines, searchQuery, selectedType, selectedStatus, sortOrder]);
 
-  // --- Handlers ---
+  
 
   const handleUpdateMachineStatus = useCallback(async () => {
     if (!selectedMachine || !newStatus) {
@@ -810,7 +810,7 @@ export default function GestionMaquinaria() {
     try {
       await MaquinariaService.actualizarEstadoMaquina(selectedMachine.id, newStatus);
       
-      // Actualización optimista del estado local
+      
       setMachines(currentMachines =>
         currentMachines.map(m =>
           m.id === selectedMachine.id ? { ...m, status: newStatus } : m
@@ -824,12 +824,12 @@ export default function GestionMaquinaria() {
     }
   }, [selectedMachine, newStatus, closeUpdateDialog]);
 
-  // --- (CORREGIDO) ---
+  
   const handleApproveReservation = useCallback(async (reserva) => {
     try {
       await MaquinariaService.aprobarReserva(reserva);
 
-      // Actualización optimista de la lista de máquinas
+      
       setMachines((currentMachines) =>
         currentMachines.map((m) =>
           m.id === reserva.machineId
@@ -838,8 +838,8 @@ export default function GestionMaquinaria() {
         )
       );
 
-      // --- ¡LÍNEA AÑADIDA AQUÍ! ---
-      // Actualización optimista de la lista de solicitudes
+      
+      
       setReservationRequests((currentRequests) =>
         currentRequests.filter((req) => req.id !== reserva.id)
       );
@@ -848,15 +848,15 @@ export default function GestionMaquinaria() {
     } catch (e) {
       Alert.alert("Error", "No se pudo aprobar la reserva.");
     }
-  }, []); // El array vacío es correcto porque usamos (current => ...)
+  }, []); 
 
-  // --- (CORREGIDO) ---
+  
   const handleRejectReservation = useCallback(async (reserva) => {
     try {
       await MaquinariaService.rechazarReserva(reserva);
 
-      // --- ¡LÍNEA AÑADIDA AQUÍ! ---
-      // Actualización optimista de la lista de solicitudes
+      
+      
       setReservationRequests((currentRequests) =>
         currentRequests.filter((req) => req.id !== reserva.id)
       );
@@ -865,11 +865,11 @@ export default function GestionMaquinaria() {
     } catch (e) {
       Alert.alert("Error", "No se pudo rechazar la reserva.");
     }
-  }, []); // El array vacío es correcto
+  }, []); 
 
   const handleUpdateMaintenance = useCallback(
     async (mantenimientoId, status, machineId) => {
-      // ... (Tu código de handleUpdateMaintenance no cambia)
+      
     },
     []
   );
@@ -880,13 +880,13 @@ export default function GestionMaquinaria() {
   }, []);
 
   const handleDelete = useCallback((machine) => {
-    // ... (Tu código de handleDelete no cambia)
+    
   }, []);
 
   const handleBackToList = useCallback((refresh) => {
     setViewMode("list");
     setEditingMachine(null);
-    // La recarga manual con refreshKey ya no es necesaria
+    
   }, []);
 
   const openUpdateDialog = useCallback((machine) => {
@@ -913,24 +913,24 @@ export default function GestionMaquinaria() {
   }, []);
 
   const handleConfirmMaint = useCallback(async () => {
-    // ... (Tu código de handleConfirmMaint no cambia)
+    
   }, [selectedMachine, maintFormData, closeMaintModal]);
 
   const onDateChange = useCallback(
     (event, selectedDate) => {
-      // ... (Tu código de onDateChange no cambia)
+      
     },
     [datePickerField]
   );
 
   const openDatePicker = useCallback(
     (field) => {
-      // ... (Tu código de openDatePicker no cambia)
+      
     },
     [maintFormData]
   );
 
-  // --- renderScene (MODIFICADO) ---
+  
   const renderScene = useCallback(
     ({ route }) => {
       switch (route.key) {
@@ -977,13 +977,13 @@ export default function GestionMaquinaria() {
       }
     },
     [
-      // Dependencias de los filtros
+      
       filteredMachines,
       searchQuery,
       selectedType,
       selectedStatus,
       sortOrder,
-      // Dependencias originales
+      
       machines,
       reservationRequests,
       maintenanceRequests,
@@ -999,7 +999,7 @@ export default function GestionMaquinaria() {
     ]
   );
 
-  // --- Renderizado principal (Sin cambios) ---
+  
   if (loading) {
     return (
       <View style={styles.centered}>

@@ -1,4 +1,4 @@
-// App.js
+
 
 import React, { useState, useEffect } from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
@@ -6,33 +6,33 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Toast from "react-native-toast-message";
 
-// --- Importaciones de Firebase ---
+
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebaseConfig"; 
 import { UserProvider } from "./src/context/UserContext";
 
-// --- Importaciones de tus Vistas ---
+
 import LoginScreen from "./src/views/Login.js";
 import InicioAdministrador from "./src/views/InicioAdministrador.js";
 
-// --- IMPORTACIONES DE EMPLEADO ---
+
 import InicioEmpleado from "./src/views/InicioEmpleado.js"; 
 import VistaEmpleado from "./src/views/VistaEmpleado.js"; 
 import GestionMaquinariaEmpleado from "./src/views/empleado_modules/GestionMaquinaria.js";
 
-// --- IMPORTACIÓN DE PROVEEDOR ---
+
 import InicioProveedor from "./src/views/proveedor_modules/InicioProveedor.js";
 
-// --- (INICIO DE MODIFICACIÓN) ---
-// 1. Importar la nueva vista del Mapa
+
+
 import MapaFinca from "./src/views/admin_modules/MapaFinca.js";
-// --- (FIN DE MODIFICACIÓN) ---
+
 
 
 const Stack = createNativeStackNavigator();
 
-// Stack para usuarios no autenticados
+
 const AuthStack = () => (
   <Stack.Navigator>
     <Stack.Screen
@@ -43,7 +43,7 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
-// Stack para usuarios con rol de Administrador
+
 const AdminStack = () => (
   <Stack.Navigator>
     <Stack.Screen
@@ -65,7 +65,7 @@ const AdminStack = () => (
   
 );
 
-// --- STACK DE EMPLEADO ---
+
 const EmployeeStack = () => (
   <Stack.Navigator>
     <Stack.Screen
@@ -86,7 +86,7 @@ const EmployeeStack = () => (
   </Stack.Navigator>
 );
 
-// --- STACK DE PROVEEDOR ---
+
 const ProveedorStack = () => (
   <Stack.Navigator>
     <Stack.Screen
@@ -98,7 +98,7 @@ const ProveedorStack = () => (
 );
 
 
-// --- COMPONENTE PRINCIPAL APP ---
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);

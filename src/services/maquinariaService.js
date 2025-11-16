@@ -1,5 +1,5 @@
-// src/services/maquinariaService.js
-import { db } from '../../firebaseConfig'; // Ajusta la ruta si es necesario
+
+import { db } from '../../firebaseConfig'; 
 import {
   collection,
   onSnapshot,
@@ -11,10 +11,10 @@ import {
   where,
   writeBatch,
   deleteDoc,
-  orderBy, // <-- Asegúrate que orderBy esté importado
+  orderBy, 
 } from 'firebase/firestore';
 
-// --- (NUEVO) Helper de Notificaciones ---
+
 /**
  * Crea una notificación para un empleado específico.
  * @param {string} userId - El UID del empleado a notificar.
@@ -53,9 +53,9 @@ const crearNotificacionAdmin = (title, message, type = 'info') => {
   });
 };
 
-// --- STREAMS (Lecturas en tiempo real) ---
 
-// Escucha todas las máquinas
+
+
 export const streamMaquinas = (callback) => {
   const q = collection(db, 'machines'); 
   return onSnapshot(q, (snapshot) => {
@@ -66,7 +66,7 @@ export const streamMaquinas = (callback) => {
   });
 };
 
-// (NUEVO) Escucha máquinas asignadas a un empleado específico
+
 export const streamMaquinasAsignadas = (userId, callback) => {
   if (!userId) return () => {};
   const q = query(collection(db, 'machines'), where('assignedToId', '==', userId));
@@ -78,7 +78,7 @@ export const streamMaquinasAsignadas = (userId, callback) => {
   });
 };
 
-// Escucha solo las reservas pendientes
+
 export const streamReservasPendientes = (callback) => {
   const q = query(collection(db, 'reservations'), where('status', '==', 'pending')); 
   return onSnapshot(q, (snapshot) => {
@@ -89,7 +89,7 @@ export const streamReservasPendientes = (callback) => {
   });
 };
 
-// Escucha solo mantenimientos no completados
+
 export const streamMantenimientosPendientes = (callback) => {
   const q = query(collection(db, 'maintenanceRequests'), where('status', '!=', 'completed')); 
   return onSnapshot(q, (snapshot) => {
@@ -100,7 +100,7 @@ export const streamMantenimientosPendientes = (callback) => {
   });
 };
 
-// --- (NUEVO) Stream de Notificaciones para Empleado ---
+
 export const streamNotificacionesEmpleado = (userId, callback) => {
   if (!userId) return () => {}; 
 
@@ -122,7 +122,7 @@ export const streamNotificacionesEmpleado = (userId, callback) => {
   });
 };
 
-// (NUEVO) Stream de Notificaciones para Admin
+
 export const streamNotificacionesAdmin = (callback) => {
   const q = query(
     collection(db, 'admin_notifications'),
@@ -142,9 +142,9 @@ export const streamNotificacionesAdmin = (callback) => {
   });
 };
 
-// --- ACCIONES (Escrituras) ---
 
-// Empleado: Crea una solicitud de reserva
+
+
 export const crearSolicitudReserva = (reservaData) => {
   return addDoc(collection(db, 'reservations'), {
     ...reservaData,
@@ -153,24 +153,24 @@ export const crearSolicitudReserva = (reservaData) => {
   });
 };
 
-// Empleado: Crea una solicitud de mantenimiento
+
 export const crearSolicitudMantenimiento = (mantenimientoData) => {
   return addDoc(collection(db, 'maintenanceRequests'), {
     ...mantenimientoData,
-    status: 'pending', // Estado inicial
+    status: 'pending', 
     requestedAt: serverTimestamp(),
   });
 };
 
-// (NUEVO) Empleado: Marca una tarea como completada y devuelve la máquina
+
 export const marcarTareaCompletada = async (machine, userId, userName) => {
   const batch = writeBatch(db);
 
-  // 1. Actualiza la máquina
+  
   const machineRef = doc(db, 'machines', machine.id);
   batch.update(machineRef, { status: 'available', assignedToId: null });
 
-  // 2. Crea notificación para el admin
+  
   await crearNotificacionAdmin(
     'Máquina Devuelta',
     `${userName} ha devuelto la máquina "${machine.name}". Ahora está disponible.`,
@@ -180,7 +180,7 @@ export const marcarTareaCompletada = async (machine, userId, userName) => {
   return batch.commit();
 };
 
-// Admin: Actualiza el estado de una máquina
+
 export const actualizarEstadoMaquina = (machineId, newStatus) => {
   const machineRef = doc(db, 'machines', machineId); 
   const data = {
@@ -190,19 +190,19 @@ export const actualizarEstadoMaquina = (machineId, newStatus) => {
   return updateDoc(machineRef, data); 
 };
 
-// Admin: Aprueba una reserva (MODIFICADO PARA USAR SOLO ID)
+
 export const aprobarReserva = async (reserva) => { 
   const batch = writeBatch(db); 
   
-  // 1. Actualiza la reserva
+  
   const reservaRef = doc(db, 'reservations', reserva.id); 
   batch.update(reservaRef, { status: 'approved' }); 
   
-  // 2. Actualiza la máquina (solo con el ID)
+  
   const machineRef = doc(db, 'machines', reserva.machineId); 
   batch.update(machineRef, { status: 'in-use', assignedToId: reserva.requestedById }); 
   
-  // 3. Enviar notificación al empleado
+  
   await crearNotificacionEmpleado(
     reserva.requestedById,
     'Reserva Aprobada',
@@ -213,11 +213,11 @@ export const aprobarReserva = async (reserva) => {
   return batch.commit(); 
 };
 
-// Admin: Rechaza una reserva (MODIFICADO)
-export const rechazarReserva = async (reserva) => { // Recibe el objeto 'reserva' completo
+
+export const rechazarReserva = async (reserva) => { 
   const reservaRef = doc(db, 'reservations', reserva.id); 
   
-  // 1. (NUEVO) Enviar notificación al empleado
+  
   await crearNotificacionEmpleado(
     reserva.requestedById,
     'Reserva Rechazada',
@@ -225,14 +225,14 @@ export const rechazarReserva = async (reserva) => { // Recibe el objeto 'reserva
     'error'
   );
   
-  // 2. Actualizar (o eliminar) la reserva
-  // Opción A: Marcar como rechazada
+  
+  
    return updateDoc(reservaRef, { status: 'rejected' });
-  // Opción B: Eliminar la solicitud
-  // return deleteDoc(reservaRef); 
+  
+  
 };
 
-// Admin: Actualiza estado de mantenimiento (Solicitud de Mantenimiento)
+
 export const actualizarEstadoMantenimiento = async (mantenimientoId, newStatus, machineId) => {
   const batch = writeBatch(db); 
   const mantenimientoRef = doc(db, 'maintenanceRequests', mantenimientoId); 
@@ -246,7 +246,7 @@ export const actualizarEstadoMantenimiento = async (mantenimientoId, newStatus, 
   return batch.commit(); 
 };
 
-// --- CRUD DE MAQUINARIA ---
+
 
 export const createMachine = (data) => {
   return addDoc(collection(db, 'machines'), {
@@ -274,7 +274,7 @@ export const registrarMantenimiento = (id, data) => {
   return updateDoc(machineRef, data);
 };
 
-// --- (NUEVO) Marcar Notificación como Leída ---
+
 export const marcarNotificacionLeida = (notificacionId) => {
   const notifRef = doc(db, 'notificaciones', notificacionId);
   try {

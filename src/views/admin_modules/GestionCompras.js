@@ -1,4 +1,4 @@
-// src/views/admin_modules/GestionCompras.js
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator, FlatList, Platform, KeyboardAvoidingView
@@ -8,7 +8,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { TabView, TabBar } from "react-native-tab-view"; 
 import { Timestamp } from 'firebase/firestore'; 
 
-// Importamos los dos servicios
+
 import { crearPedidoProveedor, streamPedidosAdmin, marcarPedidoRecibido } from '../../services/pedidoProveedorService'; 
 import { getAllCompras, updateCompraStatus, deleteCompra } from '../../services/compraService'; 
 import { auth } from '../../../firebaseConfig'; 
@@ -17,30 +17,30 @@ import { getAllProveedores } from '../../services/proveedorService';
 import { Picker } from '@react-native-picker/picker';
 import styles from '../../styles/adminStyles'; 
 
-// --- Formulario de Compras (MODIFICADO) ---
+
 const CompraForm = ({ onBackToList, initialData = null, user = null, initialProveedor = null }) => {
   const isEditing = !!initialData;
   
-  // --- (INICIO DE MODIFICACIÓN) ---
-  // Añadimos TODOS los campos
+  
+  
   const [formData, setFormData] = useState({
     nombreProducto: initialData?.nombreProducto || '',
     cantidad: initialData?.cantidad || '',
     unidad: initialData?.unidad || 'unidades',
-    items: initialData?.items || '', // <-- AÑADIDO (Descripción)
-    deposito_area: initialData?.deposito_area || '', // <-- AÑADIDO
+    items: initialData?.items || '', 
+    deposito_area: initialData?.deposito_area || '', 
     fechaRequeridaStr: initialData?.fechaRequeridaStr || '', 
   });
-  // --- (FIN DE MODIFICACIÓN) ---
+  
 
   const [loading, setLoading] = useState(false);
   const [providers, setProviders] = useState([]);
   const [selectedProviderId, setSelectedProviderId] = useState(initialProveedor?.id || '');
-  const [selectedProviderName, setSelectedProviderName] = useState(initialProveedor?.nombreEmpresa || ''); // <-- AÑADIDO
+  const [selectedProviderName, setSelectedProviderName] = useState(initialProveedor?.nombreEmpresa || ''); 
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Refs para los nuevos campos
+  
   const cantidadRef = useRef(null);
   const unidadRef = useRef(null);
   const itemsRef = useRef(null);
@@ -68,8 +68,8 @@ const CompraForm = ({ onBackToList, initialData = null, user = null, initialProv
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // --- (INICIO DE MODIFICACIÓN) ---
-  // Guardamos nombre e ID al cambiar
+  
+  
   const handleProviderChange = (proveedorId) => {
     const selectedProvider = providers.find(p => p.id === proveedorId);
     if (selectedProvider) {
@@ -77,7 +77,7 @@ const CompraForm = ({ onBackToList, initialData = null, user = null, initialProv
       setSelectedProviderName(selectedProvider.nombreEmpresa);
     }
   };
-  // --- (FIN DE MODIFICACIÓN) ---
+  
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -87,14 +87,14 @@ const CompraForm = ({ onBackToList, initialData = null, user = null, initialProv
         setLoading(false);
         return;
     }
-    // --- (INICIO DE MODIFICACIÓN) ---
-    // Validación actualizada
+    
+    
     if (!formData.nombreProducto || !formData.cantidad || !formData.fechaRequeridaStr || !formData.items) {
         Alert.alert("Error", "Producto, Cantidad, Items (Descripción) y Fecha son campos obligatorios.");
         setLoading(false);
         return;
     }
-    // --- (FIN DE MODIFICACIÓN) ---
+    
 
     let fechaRequeridaTimestamp = null;
     const parts = formData.fechaRequeridaStr.split('/');
@@ -110,21 +110,21 @@ const CompraForm = ({ onBackToList, initialData = null, user = null, initialProv
         return;
     }
 
-    // --- (INICIO DE MODIFICACIÓN) ---
-    // Enviamos TODOS los datos
+    
+    
     const pedidoData = {
         idAdmin: user?.uid,
         nombreAdmin: user?.displayName || user?.email || 'Admin',
         idProveedor: selectedProviderId,
-        nombreProveedor: selectedProviderName, // <-- AÑADIDO
+        nombreProveedor: selectedProviderName, 
         nombreProducto: formData.nombreProducto,
         cantidad: parseInt(formData.cantidad, 10) || 0,
         unidad: formData.unidad,
-        items: formData.items, // <-- AÑADIDO
-        deposito_area: formData.deposito_area, // <-- AÑADIDO
+        items: formData.items, 
+        deposito_area: formData.deposito_area, 
         fechaRequerida: fechaRequeridaTimestamp,
     };
-    // --- (FIN DE MODIFICACIÓN) ---
+    
 
     const result = await crearPedidoProveedor(pedidoData);
 
@@ -278,7 +278,7 @@ const CompraForm = ({ onBackToList, initialData = null, user = null, initialProv
 };
 
 
-// --- (NUEVO) Lista de Pedidos (Nueva Colección) ---
+
 const PedidosList = ({ onGoToAddForm, user }) => {
   const [pedidosList, setPedidosList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -286,7 +286,7 @@ const PedidosList = ({ onGoToAddForm, user }) => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [expandedPedidoId, setExpandedPedidoId] = useState(null);
 
-  // Escucha los pedidos de la NUEVA colección
+  
   useEffect(() => {
     setLoading(true);
     const unsubscribe = streamPedidosAdmin(user.uid, (pedidos) => {
@@ -306,7 +306,7 @@ const PedidosList = ({ onGoToAddForm, user }) => {
     return tempPedidos;
   }, [pedidosList, filterEstado, sortOrder]);
 
-  // Estilos para los NUEVOS estados
+  
   const getStatusStyle = (estado) => {
      switch (estado) {
       case 'En espera': return styles.statusEnEspera;
@@ -327,7 +327,7 @@ const PedidosList = ({ onGoToAddForm, user }) => {
           text: "Sí, Recibido",
           onPress: async () => {
             await marcarPedidoRecibido(pedido.id);
-            // La lista se actualiza sola por el listener
+            
           },
         },
       ]
@@ -426,7 +426,7 @@ const PedidosList = ({ onGoToAddForm, user }) => {
   );
 };
 
-// --- (VIEJO) Lista de Compras (Colección Antigua) ---
+
 const CompraListAntigua = ({ onGoToAddForm }) => {
   const [compraList, setCompraList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -440,7 +440,7 @@ const CompraListAntigua = ({ onGoToAddForm }) => {
     catch (error) { Alert.alert("Error", "No se pudo cargar la lista de compras."); }
     finally { setLoading(false); }
   };
-  useEffect(() => { fetchCompras(); }, []); // Solo carga una vez
+  useEffect(() => { fetchCompras(); }, []); 
 
   const filteredAndSortedCompras = useMemo(() => {
     let tempCompras = compraList.filter(compra => filterEstado === 'all' || compra.estado === filterEstado);
@@ -584,23 +584,23 @@ const CompraListAntigua = ({ onGoToAddForm }) => {
 };
 
 
-// --- Componente Principal del Módulo de Compras (REDISEÑADO CON TABS) ---
+
 export default function GestionCompras({ user, initialProveedor }) {
   const [viewMode, setViewMode] = useState('list');
-  const [editingCompra, setEditingCompra] = useState(null); // Para el formulario de edición
-  const [index, setIndex] = useState(0); // Pestaña 0 = Nuevos, Pestaña 1 = Antiguos
+  const [editingCompra, setEditingCompra] = useState(null); 
+  const [index, setIndex] = useState(0); 
 
   const routes = useMemo(
     () => [
-      { key: "nuevos", title: "Pedidos a Proveedor" }, // <-- Título cambiado
-      { key: "antiguos", title: "Historial (Antiguo)" }, // <-- Título cambiado
+      { key: "nuevos", title: "Pedidos a Proveedor" }, 
+      { key: "antiguos", title: "Historial (Antiguo)" }, 
     ],
     []
   );
 
   const currentUser = user || auth.currentUser;
 
-  // Si venimos de 'GestionProveedores', vamos directo al formulario
+  
   useEffect(() => {
     if (initialProveedor) {
       setViewMode('add');
@@ -612,10 +612,10 @@ export default function GestionCompras({ user, initialProveedor }) {
   const handleBackToList = (refresh) => {
     setViewMode('list');
     setEditingCompra(null);
-    // 'refresh' no es necesario porque las listas ahora usan listeners (stream)
+    
   };
 
-  // Renderiza la escena para el TabView
+  
   const renderScene = useCallback(
     ({ route }) => {
       switch (route.key) {
@@ -639,17 +639,17 @@ export default function GestionCompras({ user, initialProveedor }) {
     [currentUser]
   );
 
-  // Si estamos en modo 'add', muestra solo el formulario
+  
   if (viewMode === 'add') {
     return <CompraForm onBackToList={handleBackToList} user={currentUser} initialProveedor={initialProveedor} />;
   }
 
-  // Si estamos en modo 'edit' (aún no implementado, pero listo)
+  
   if (viewMode === 'edit') {
      return <CompraForm onBackToList={handleBackToList} user={currentUser} initialData={editingCompra} />;
   }
 
-  // Por defecto, muestra la lista con pestañas
+  
   return (
     <TabView
       navigationState={{ index, routes }}

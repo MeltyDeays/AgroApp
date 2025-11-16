@@ -1,4 +1,4 @@
-// src/styles/mapaStyles.js
+
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
@@ -41,7 +41,7 @@ export default StyleSheet.create({
     borderWidth: 2,
   },
   
-  // --- (ESTILOS PARA MODALES MEJORADOS) ---
+  
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -66,9 +66,36 @@ export default StyleSheet.create({
     fontWeight: 'bold',
     color: '#1F2937',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 8, 
   },
-  // MEJORA: Estilo para elementos de lista en Modales (Empleados/Tareas)
+  
+  
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  modalActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginBottom: 12,
+  },
+  modalActionButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginLeft: 12,
+  },
+  
+
+  
   listItem: {
     backgroundColor: '#FFFFFF', 
     paddingVertical: 12,
@@ -90,7 +117,7 @@ export default StyleSheet.create({
     paddingVertical: 20,
   },
   
-  // --- (ESTILOS PARA MODAL DE TAREA) ---
+  
   label: {
     fontSize: 14,
     color: '#374151',
@@ -140,7 +167,7 @@ export default StyleSheet.create({
     fontSize: 16,
   },
   
-  // --- (NUEVOS ESTILOS PARA TAREAS ACTUALES) ---
+  
   tasksHeader: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -153,7 +180,7 @@ export default StyleSheet.create({
     paddingBottom: 8,
   },
   taskCard: {
-    backgroundColor: '#FFFBEB', // Amarillo suave
+    backgroundColor: '#FFFBEB', 
     borderRadius: 8,
     padding: 16,
     marginBottom: 10,

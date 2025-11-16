@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { auth } from "../../firebaseConfig";
-// --- CORRECCIÓN 1: Importar onAuthStateChanged ---
+
 import { signOut, onAuthStateChanged } from "firebase/auth";
 import {
   registrarEntradaSalida,
@@ -20,7 +20,7 @@ import {
 import Toast from "react-native-toast-message";
 import styles from "../styles/empleadoStyles.js";
 
-// Función auxiliar (sin cambios)
+
 const getFechasFiltro = (filtro) => {
   const fin = new Date();
   const inicio = new Date();
@@ -56,37 +56,37 @@ export default function VistaEmpleado() {
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
   const [filtroActivo, setFiltroActivo] = useState("ultimo_mes");
   
-  // --- CORRECCIÓN 2: Usar useState para el usuario ---
+  
   const [user, setUser] = useState(null);
-  // const user = auth.currentUser; // <-- Esta línea se elimina
+  
 
   useEffect(() => {
     requestPermission();
   }, []);
 
-  // --- CORRECCIÓN 3: Añadir un listener de auth ---
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (authenticatedUser) => {
       if (authenticatedUser) {
-        setUser(authenticatedUser); // Pone el usuario en el estado
+        setUser(authenticatedUser); 
       } else {
         setUser(null);
       }
     });
-    return () => unsubscribe(); // Limpia el listener
-  }, []); // Se ejecuta solo una vez
+    return () => unsubscribe(); 
+  }, []); 
 
-  // --- CORRECCIÓN 4: Tu useEffect ahora funcionará ---
+  
   useEffect(() => {
-    // Este Effect se activará cuando 'user' (del estado) cambie
+    
     if (user) {
       setCodigoManual(user.uid); 
-      cargarHistorial(); // Y ahora sí llamará a cargarHistorial
+      cargarHistorial(); 
     } else {
       setHistorial([]);
     }
-  }, [user, filtroActivo]); // Depende del 'user' del estado
-  // --- FIN DE CORRECCIONES ---
+  }, [user, filtroActivo]); 
+  
 
   const cargarHistorial = async () => {
     if (!user) return; 
@@ -116,7 +116,7 @@ export default function VistaEmpleado() {
   const manejarEscaneo = async ({ data }) => {
     setEscaneado(true);
     setMostrarEscanner(false);
-    if (!user) return; // Chequeo de seguridad
+    if (!user) return; 
     const codigoEmpleado = user.uid; 
     const esEntrada = modoEscaneo === "entrada";
     try {
@@ -134,7 +134,7 @@ export default function VistaEmpleado() {
   };
 
   const manejarRegistroManual = async (esEntrada) => {
-    if (!user) return; // Chequeo de seguridad
+    if (!user) return; 
     const codigoEmpleado = user.uid; 
     const accionTexto = esEntrada ? "Entrada" : "Salida";
     try {
@@ -158,7 +158,7 @@ export default function VistaEmpleado() {
     signOut(auth);
   };
 
-  // --- CORRECCIÓN: Mejor estado de carga ---
+  
   if (!permission || !user) {
     return (
       <View style={styles.container}>
@@ -167,7 +167,7 @@ export default function VistaEmpleado() {
       </View>
     );
   }
-  // --- FIN DE CORRECCIÓN ---
+  
 
   if (!permission.granted) {
     return (

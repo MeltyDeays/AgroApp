@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react"; // Añadido useMemo
+import React, { useState, useEffect, useMemo } from "react"; 
 import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
@@ -7,10 +7,10 @@ import { registrarEntradaSalida, obtenerRegistrosAsistencia } from "../services/
 import QRCode from 'react-native-qrcode-svg';
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../firebaseConfig";
-import styles from "../styles/asistenciaStyles"; // Asegúrate que la ruta es correcta
+import styles from "../styles/asistenciaStyles"; 
 
 export function VistaAsistencia({ navigation }) {
-  // --- ESTADOS ---
+  
   const [registrosAsistencia, setRegistrosAsistencia] = useState([]);
   const [codigoEmpleado, setCodigoEmpleado] = useState("");
   const [cargando, setCargando] = useState(true);
@@ -21,61 +21,61 @@ export function VistaAsistencia({ navigation }) {
   const [modoEscaneo, setModoEscaneo] = useState('entrada');
   const [escaneado, setEscaneado] = useState(false);
 
-  // --- NUEVO ESTADO PARA FILTRO ---
-  const [filtroEstado, setFiltroEstado] = useState('all'); // 'all', 'Presente', 'Tardanza', etc.
+  
+  const [filtroEstado, setFiltroEstado] = useState('all'); 
 
-  // --- EFECTOS ---
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      // Si no hay usuario (ej. cierra sesión), no hacemos nada aquí
-      // La redirección principal la maneja App.js
+      
+      
       if (currentUser) {
-        requestPermission(); // Pide permiso de cámara si hay usuario
-        cargarRegistrosHoy(); // Carga registros si hay usuario
+        requestPermission(); 
+        cargarRegistrosHoy(); 
       }
     });
-    return () => unsubscribe(); // Limpia el listener al desmontar
-  }, []); // Se ejecuta solo al montar
+    return () => unsubscribe(); 
+  }, []); 
 
   useEffect(() => {
     const actualizarQR = () => setQrKioscoData(new Date().toISOString());
     actualizarQR();
-    const intervalId = setInterval(actualizarQR, 60000); // Actualiza cada minuto
-    return () => clearInterval(intervalId); // Limpia el intervalo al desmontar
+    const intervalId = setInterval(actualizarQR, 60000); 
+    return () => clearInterval(intervalId); 
   }, []);
 
-  // --- MANEJADORES DE LÓGICA ---
+  
   const cargarRegistrosHoy = async () => {
     setCargando(true);
-    setFiltroEstado('all'); // Resetea el filtro al cargar/actualizar
+    setFiltroEstado('all'); 
     try {
-      const registros = await obtenerRegistrosAsistencia(); // Llama al servicio
-      setRegistrosAsistencia(registros); // Actualiza el estado con los datos
+      const registros = await obtenerRegistrosAsistencia(); 
+      setRegistrosAsistencia(registros); 
     } catch (error) {
       Toast.show({ type: "error", text1: "Error", text2: "No se pudieron cargar los registros" });
     } finally {
-      setCargando(false); // Quita el indicador de carga
+      setCargando(false); 
     }
   };
   
-  // Abre la cámara para escanear
+  
   const iniciarEscaneo = (modo) => {
     setModoEscaneo(modo);
     setMostrarEscanner(true);
-    setEscaneado(false); // Resetea el estado de escaneo
+    setEscaneado(false); 
   };
   
-  // Procesa el código QR escaneado
+  
   const manejarEscaneoQR = async ({ data }) => {
-    setEscaneado(true); // Evita escanear múltiples veces
-    setMostrarEscanner(false); // Cierra la cámara
+    setEscaneado(true); 
+    setMostrarEscanner(false); 
     const esEntrada = modoEscaneo === 'entrada';
     const accionTexto = esEntrada ? 'Entrada' : 'Salida';
     try {
-        const resultado = await registrarEntradaSalida(data, esEntrada); // Llama al servicio
+        const resultado = await registrarEntradaSalida(data, esEntrada); 
         if (resultado.success) {
             Toast.show({ type: "success", text1: "Éxito", text2: `${accionTexto} registrada` });
-            await cargarRegistrosHoy(); // Recarga la lista
+            await cargarRegistrosHoy(); 
         } else {
             Toast.show({ type: "info", text1: "Información", text2: resultado.message });
         }
@@ -84,34 +84,34 @@ export function VistaAsistencia({ navigation }) {
     }
   };
 
-  // Procesa el registro manual con UID
+  
   const manejarRegistroManual = async (esEntrada) => {
     if (!codigoEmpleado) return Toast.show({ type: "error", text1: "Error", text2: "Por favor ingrese un código" });
     const accionTexto = esEntrada ? 'Entrada' : 'Salida';
     try {
-      const resultado = await registrarEntradaSalida(codigoEmpleado, esEntrada); // Llama al servicio
+      const resultado = await registrarEntradaSalida(codigoEmpleado, esEntrada); 
       if (resultado.success) {
           Toast.show({ type: "success", text1: "Éxito", text2: `${accionTexto} registrada` });
-          await cargarRegistrosHoy(); // Recarga la lista
+          await cargarRegistrosHoy(); 
       } else {
           Toast.show({ type: "info", text1: "Información", text2: resultado.message });
       }
     } catch (error) {
       Toast.show({ type: "error", text1: "Error", text2: `No se pudo registrar la ${accionTexto.toLowerCase()}` });
     }
-    setCodigoEmpleado(""); // Limpia el campo de texto
+    setCodigoEmpleado(""); 
   };
 
-  // Devuelve el JSX para la insignia de estado (con colores)
+  
   const obtenerInsigniaEstado = (estado) => {
     const estilosInsignia = {
-      Presente: { backgroundColor: "#d1fae5", color: "#10b981" }, // Verde
-      Completado: { backgroundColor: "#d1fae5", color: "#10b981" }, // Verde
-      Tardanza: { backgroundColor: "#fefcbf", color: "#f59e0b" }, // Amarillo
-      Ausente: { backgroundColor: "#fee2e2", color: "#ef4444" }, // Rojo
-      Parcial: { backgroundColor: "#fed7aa", color: "#f97316" }, // Naranja
+      Presente: { backgroundColor: "#d1fae5", color: "#10b981" }, 
+      Completado: { backgroundColor: "#d1fae5", color: "#10b981" }, 
+      Tardanza: { backgroundColor: "#fefcbf", color: "#f59e0b" }, 
+      Ausente: { backgroundColor: "#fee2e2", color: "#ef4444" }, 
+      Parcial: { backgroundColor: "#fed7aa", color: "#f97316" }, 
     };
-    // Estilo por defecto si el estado no coincide
+    
     const { backgroundColor, color } = estilosInsignia[estado] || { backgroundColor: "#e5e7eb", color: "#6b7280" };
     
     return (
@@ -124,32 +124,32 @@ export function VistaAsistencia({ navigation }) {
     );
   };
   
-  // Calcula las estadísticas para las tarjetas de resumen
+  
   const estadisticas = {
-    // Cuenta Presente Y Completado como presentes
+    
     presentes: registrosAsistencia.filter(r => r.estado === 'Presente' || r.estado === 'Completado').length,
     tardanzas: registrosAsistencia.filter(r => r.estado === 'Tardanza').length,
     ausentes: registrosAsistencia.filter(r => r.estado === 'Ausente').length,
     parciales: registrosAsistencia.filter(r => r.estado === 'Parcial').length,
   };
 
-  // --- LÓGICA DE FILTRADO ---
-  // Memoiza la lista filtrada para evitar recálculos innecesarios
+  
+  
   const registrosFiltrados = useMemo(() => {
-    // Si el filtro es 'all', devuelve la lista completa
+    
     if (filtroEstado === 'all') {
       return registrosAsistencia;
     }
-    // Caso especial para "Presentes" que incluye "Completado"
+    
     if (filtroEstado === 'Presente') { 
       return registrosAsistencia.filter(r => r.estado === 'Presente' || r.estado === 'Completado');
     }
-    // Filtro normal para los demás estados
+    
     return registrosAsistencia.filter(r => r.estado === filtroEstado);
-  }, [registrosAsistencia, filtroEstado]); // Se recalcula si cambia la lista o el filtro
+  }, [registrosAsistencia, filtroEstado]); 
 
-  // --- RENDERIZADO CONDICIONAL ---
-  // Muestra carga mientras se piden permisos o se cargan datos
+  
+  
   if (!permission || cargando) {
     return (
         <View style={[styles.contenedor, styles.center]}>
@@ -159,7 +159,7 @@ export function VistaAsistencia({ navigation }) {
     );
   }
 
-  // Muestra si no se concedió permiso de cámara
+  
   if (!permission.granted) {
     return (
       <View style={[styles.contenedor, styles.center, {padding: 20}]}>
@@ -171,14 +171,14 @@ export function VistaAsistencia({ navigation }) {
     );
   }
 
-  // Muestra la vista de cámara si está activada
+  
   if (mostrarEscanner) {
     return (
       <View style={styles.scannerContainer}>
           <CameraView
-            onBarcodeScanned={escaneado ? undefined : manejarEscaneoQR} // Llama a manejarEscaneoQR al escanear
-            barcodeScannerSettings={{ barcodeTypes: ["qr"] }} // Solo detecta QR
-            style={StyleSheet.absoluteFillObject} // Ocupa toda la pantalla
+            onBarcodeScanned={escaneado ? undefined : manejarEscaneoQR} 
+            barcodeScannerSettings={{ barcodeTypes: ["qr"] }} 
+            style={StyleSheet.absoluteFillObject} 
           />
            {/* Overlay con texto y botón de cancelar */}
            <View style={styles.scannerOverlay}>
@@ -191,13 +191,13 @@ export function VistaAsistencia({ navigation }) {
     );
   }
 
-  // --- RENDERIZADO PRINCIPAL ---
+  
   return (
     <View style={styles.contenedor}>
       {/* FlatList para mostrar la lista de registros */}
       <FlatList
-        contentContainerStyle={styles.contentContainer} // Estilos del contenedor interno
-        // Componentes que aparecen antes de la lista
+        contentContainerStyle={styles.contentContainer} 
+        
         ListHeaderComponent={
           <>
             {/* Encabezado con título y fecha */}
@@ -262,9 +262,9 @@ export function VistaAsistencia({ navigation }) {
                 <View style={styles.grillaEstadisticas}>
                   {/* Tarjeta Presentes (Clickeable) */}
                   <TouchableOpacity 
-                    // Aplica estilo activo si el filtro coincide
+                    
                     style={[styles.tarjetaEstadistica, filtroEstado === 'Presente' && styles.tarjetaEstadisticaActiva]} 
-                    onPress={() => setFiltroEstado('Presente')} // Cambia el filtro al presionar
+                    onPress={() => setFiltroEstado('Presente')} 
                   >
                     <MaterialIcons name="check-circle" size={28} color="#10b981" />
                     <Text style={styles.valorEstadistica}>{estadisticas.presentes}</Text>
@@ -322,11 +322,11 @@ export function VistaAsistencia({ navigation }) {
             </View>
           </>
         }
-        // Datos para la lista (usa la versión filtrada)
+        
         data={registrosFiltrados} 
-        keyExtractor={(item) => item.id.toString()} // Clave única para cada ítem
-        style={styles.listaContenedor} // Estilos para la lista en sí
-        // Función que renderiza cada fila de la lista
+        keyExtractor={(item) => item.id.toString()} 
+        style={styles.listaContenedor} 
+        
         renderItem={({ item }) => (
           <View style={styles.filaTabla}>
             {/* Celda para el nombre (más ancha) */}
@@ -339,7 +339,7 @@ export function VistaAsistencia({ navigation }) {
             </View>
           </View>
         )}
-        // Componente a mostrar si la lista está vacía
+        
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <MaterialIcons name="schedule" size={48} color="#d1d5db" />

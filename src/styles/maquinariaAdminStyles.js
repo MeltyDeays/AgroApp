@@ -1,7 +1,7 @@
-// src/styles/maquinariaAdminStyles.js
+
 import { StyleSheet } from "react-native";
 
-// --- CAMBIO GALILEO AI: Tokens de color ---
+
 const COLORS = {
   primary: "#2563EB",
   neutralBg: "#F9FAFB",
@@ -22,7 +22,7 @@ const COLORS = {
   brokenBorder: "#FCA5A5",
 };
 
-// --- Colores Antiguos (Se mantienen para estilos no reemplazados) ---
+
 const COLORES = {
   primario: "#2563EB",
   fondo: "#F3F4F6",
@@ -36,9 +36,9 @@ const COLORES = {
 };
 
 export default StyleSheet.create({
-  // ... (Todos tus estilos existentes desde 'container' hasta 'imagePreviewPlaceholder') ...
+  
 
-  // (Copio tus estilos existentes para que sea un solo archivo)
+  
   container: { flex: 1, backgroundColor: COLORES.fondo },
   tabSceneContainer: { flex: 1 },
   scrollContainer: { flex: 1, padding: 16 },
@@ -309,7 +309,7 @@ export default StyleSheet.create({
   sortButtonActive: { borderColor: "#2563EB", backgroundColor: "#EFF6FF" },
   sortButtonText: { fontSize: 14, color: "#374151", marginLeft: 8 },
 
-  // --- (NUEVO) ESTILOS PARA LA PESTAÑA 'SOLICITUDES' ---
+  
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -350,13 +350,13 @@ export default StyleSheet.create({
     marginBottom: 16,
   },
   solicitudCard: {
-    backgroundColor: "#FFFBEB", // Fondo amarillo claro
+    backgroundColor: "#FFFBEB", 
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#FDE68A", // Borde amarillo
+    borderColor: "#FDE68A", 
     elevation: 3,
   },
   solicitudTitle: {
@@ -381,5 +381,5 @@ export default StyleSheet.create({
     paddingTop: 16,
     gap: 10,
   },
-  // Reutiliza 'buttonApprove' y 'buttonReject'
+  
 });

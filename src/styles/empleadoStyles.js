@@ -6,16 +6,16 @@ export default StyleSheet.create({
   },
   mainContainer: {
     padding: 20,
-    // paddingTop ya se maneja en el ScrollView en VistaEmpleado.js
+    
   },
   headerTitle: {
-    fontSize: 24, // <-- CAMBIO: 28 -> 24
+    fontSize: 24, 
     fontWeight: 'bold',
     color: '#1F2937',
     marginBottom: 8,
   },
   headerSubtitle: {
-    fontSize: 14, // <-- CAMBIO: 16 -> 14
+    fontSize: 14, 
     color: '#6B7280',
     marginBottom: 24,
   },
@@ -24,11 +24,11 @@ export default StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
-    boxShadow: '0 1px 10px rgba(0,0,0,0.05)', // Para web
-    elevation: 2, // Para Android
+    boxShadow: '0 1px 10px rgba(0,0,0,0.05)', 
+    elevation: 2, 
   },
   cardTitle: {
-    fontSize: 16, // <-- CAMBIO: 18 -> 16
+    fontSize: 16, 
     fontWeight: '600',
     color: '#111827',
     marginBottom: 4,
@@ -46,28 +46,28 @@ export default StyleSheet.create({
   primaryButton: {
     flex: 1,
     backgroundColor: '#10B981',
-    paddingVertical: 10, // <-- CAMBIO: 12 -> 10
+    paddingVertical: 10, 
     borderRadius: 8,
     alignItems: 'center',
   },
   primaryButtonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
-    fontSize: 14, // <-- CAMBIO: 16 -> 14
+    fontSize: 14, 
   },
   secondaryButton: {
     flex: 1,
     backgroundColor: '#F3F4F6',
     borderWidth: 1,
     borderColor: '#D1D5DB',
-    paddingVertical: 10, // <-- CAMBIO: 12 -> 10
+    paddingVertical: 10, 
     borderRadius: 8,
     alignItems: 'center',
   },
   secondaryButtonText: {
     color: '#374151',
     fontWeight: 'bold',
-    fontSize: 14, // <-- CAMBIO: 16 -> 14
+    fontSize: 14, 
   },
   input: {
     borderWidth: 1,
@@ -127,7 +127,7 @@ export default StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: '#EF4444',
-    paddingVertical: 12, // <-- CAMBIO: 14 -> 12
+    paddingVertical: 12, 
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 20,

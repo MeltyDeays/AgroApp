@@ -6,11 +6,11 @@ import { Users, ChevronDown, MoreVertical, Edit, Search, Trash2, Check } from 'l
 import { Picker } from '@react-native-picker/picker';
 import styles from '../../styles/adminStyles'; 
 
-// --- Importaciones de Servicios ---
-import { fetchEmpleados, updateEmpleado, deleteEmpleado } from '../../services/empleadoService'; // Nuevo servicio
-import { fetchSectores } from '../../services/mapaService'; // Para obtener la lista de sectores
 
-// --- Listado y Edición de Empleados ---
+import { fetchEmpleados, updateEmpleado, deleteEmpleado } from '../../services/empleadoService'; 
+import { fetchSectores } from '../../services/mapaService'; 
+
+
 const EmpleadoList = () => {
   const [empleadosList, setEmpleadosList] = useState([]);
   const [sectoresList, setSectoresList] = useState([]);
@@ -19,10 +19,10 @@ const EmpleadoList = () => {
 
   const [expandedId, setExpandedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [editingSectorId, setEditingSectorId] = useState(null); // Empleado que se está editando el sector
-  const [selectedSector, setSelectedSector] = useState(null); // Nuevo sector seleccionado
+  const [editingSectorId, setEditingSectorId] = useState(null); 
+  const [selectedSector, setSelectedSector] = useState(null); 
 
-  // 1. Cargar Empleados y Sectores
+  
   const fetchData = async () => {
     setLoading(true);
     try { 
@@ -46,20 +46,20 @@ const EmpleadoList = () => {
     return tempEmployees;
   }, [empleadosList, searchTerm]);
   
-  // Opciones para el Picker de Sectores
+  
   const sectorPickerOptions = useMemo(() => [
     { id: '', nombre: 'Sin Asignar' },
     ...sectoresList
   ], [sectoresList]);
 
-  // Handler para la asignación/edición de sector
+  
   const handleAssignSector = (empleado) => {
       setEditingSectorId(empleado.uid);
       setSelectedSector(empleado.sectorId || '');
-      setExpandedId(empleado.uid); // Mantiene expandido
+      setExpandedId(empleado.uid); 
   };
 
-  // Handler para guardar el sector asignado
+  
   const handleSaveSector = async (empleado) => {
       if(selectedSector === empleado.sectorId) {
           Alert.alert("Info", "El sector no ha cambiado.");
@@ -67,17 +67,17 @@ const EmpleadoList = () => {
           return;
       }
       try {
-          const updateData = { sectorId: selectedSector || null }; // Guardar null si es "Sin Asignar"
+          const updateData = { sectorId: selectedSector || null }; 
           await updateEmpleado(empleado.uid, updateData);
           Alert.alert("Éxito", "Sector asignado correctamente.");
           setEditingSectorId(null);
-          setRefreshKey(prev => prev + 1); // Recarga la lista
+          setRefreshKey(prev => prev + 1); 
       } catch (error) {
           Alert.alert("Error", error.message);
       }
   };
 
-  // Handler para eliminar empleado (solo del espejo, la cuenta principal es en GestiónUsuarios)
+  
   const handleDelete = (item) => {
       Alert.alert( "Confirmar Eliminación", `¿Eliminar a ${item.nombres} de la gestión de empleados? La cuenta de usuario principal debe ser eliminada desde Gestión de Usuarios.`, 
         [ { text: "Cancelar" },
@@ -86,7 +86,7 @@ const EmpleadoList = () => {
             style: "destructive", 
             onPress: async () => {
               try {
-                // Eliminamos solo el registro en la colección 'empleados'
+                
                 const result = await deleteEmpleado(item.uid);
                 
                 if (result.success) {
@@ -113,7 +113,7 @@ const EmpleadoList = () => {
 
     const toggleExpansion = () => {
       if (isEditingCurrentSector) {
-        setEditingSectorId(null); // Cancelar edición si se hace toggle out
+        setEditingSectorId(null); 
       }
       setExpandedId(isExpanded ? null : item.uid);
     };

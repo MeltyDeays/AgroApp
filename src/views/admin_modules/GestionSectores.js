@@ -1,20 +1,20 @@
-// src/views/admin_modules/GestionSectores.js
+
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'; 
 import {
   View, Text, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator, FlatList, Platform, KeyboardAvoidingView
 } from 'react-native'; 
-// --- AÑADIDO: UserCheck ---
+
 import { MapPin, ChevronLeft, Plus, Edit, Trash2, Search, Users, ClipboardList, ChevronDown, Check, UserCheck } from 'lucide-react-native';
 import { TabView, TabBar } from "react-native-tab-view"; 
-// --- MODIFICADO: Importar designarSupervisor ---
+
 import { crearSector, fetchSectores, updateSectorDetails, deleteSector, fetchTareas, marcarTareaCompletada, designarSupervisor } from '../../services/mapaService'; 
 import { getAllUsers } from '../../services/usuarioService'; 
 import { useUsers } from "../../context/UserContext";
 import { Picker } from '@react-native-picker/picker'; 
 import styles from '../../styles/adminStyles'; 
-import { auth } from '../../../firebaseConfig'; // <-- AÑADIDO: Importar auth
+import { auth } from '../../../firebaseConfig'; 
 
-// --- Formulario para crear/editar Sector ---
+
 const SectorForm = ({ onBackToList, initialData = null }) => {
   const isEditing = !!initialData;
   const [formData, setFormData] = useState({
@@ -158,7 +158,7 @@ const SectorForm = ({ onBackToList, initialData = null }) => {
 };
 
 
-// --- Tab 1: Listado y CRUD de Sectores ---
+
 const SectoresTab = ({ onGoToAddForm, onEditSector, refreshKey }) => {
   const [sectorList, setSectorList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -182,7 +182,7 @@ const SectoresTab = ({ onGoToAddForm, onEditSector, refreshKey }) => {
           style: "destructive", 
           onPress: async () => {
             try {
-              // TODO: Añadir lógica para quitar supervisorId del empleado si se elimina el sector
+              
               const result = await deleteSector(item.id); 
               if (result.success) { 
                 Alert.alert("Éxito", "Sector eliminado."); 
@@ -249,14 +249,14 @@ const SectoresTab = ({ onGoToAddForm, onEditSector, refreshKey }) => {
 };
 
 
-// --- Tab 2: Empleados por Sector (MODIFICADO) ---
+
 const EmpleadosTab = ({ sectores }) => {
-  const [userList, setUserList] = useState([]); // Usamos una lista local
+  const [userList, setUserList] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [filterSector, setFilterSector] = useState('all');
-  const admin = auth.currentUser; // Obtener el admin actual
+  const admin = auth.currentUser; 
   
-  // Cargamos todos los usuarios y los almacenamos.
+  
   const fetchUsers = async () => {
     setLoading(true);
     try { 
@@ -268,20 +268,20 @@ const EmpleadosTab = ({ sectores }) => {
   };
   useEffect(() => { fetchUsers(); }, []); 
   
-  // Filtramos por rol y sector
+  
   const filteredEmployees = useMemo(() => {
     let employees = userList.filter(user => (user.rol === 'empleado' || user.role === 'empleado'));
     
     if (filterSector !== 'all') {
-      // Muestra solo empleados asignados a ESE sector
+      
       employees = employees.filter(user => user.sectorId === filterSector);
     } else {
-      // Muestra TODOS los empleados
+      
     }
     return employees;
   }, [userList, filterSector]);
 
-  // --- AÑADIDO: Lógica para designar supervisor ---
+  
   const handleDesignar = async (empleado) => {
     if (filterSector === 'all') {
       Alert.alert("Acción Requerida", "Por favor, primero filtre por un sector específico para asignar un supervisor.");
@@ -319,7 +319,7 @@ const EmpleadosTab = ({ sectores }) => {
   const renderEmployeeItem = ({ item }) => {
     const sectorName = sectores.find(s => s.id === item.sectorId)?.nombre || 'Sin Asignar';
     
-    // --- AÑADIDO: Lógica de Badge ---
+    
     const esSupervisorDelSectorFiltrado = filterSector !== 'all' && item.esSupervisorDe === filterSector;
     
     return (
@@ -347,7 +347,7 @@ const EmpleadosTab = ({ sectores }) => {
                 <TouchableOpacity 
                   style={[styles.actionButton, styles.pedidoButton]} 
                   onPress={() => handleDesignar(item)}
-                  // Deshabilitar si ya es supervisor de este sector
+                  
                   disabled={esSupervisorDelSectorFiltrado} 
                 >
                   <UserCheck size={16} color={esSupervisorDelSectorFiltrado ? "#CCC" : "#FFFFFF"} />
@@ -363,9 +363,9 @@ const EmpleadosTab = ({ sectores }) => {
     );
   };
   
-  // Opción "Todos" + Lista de sectores
+  
   const pickerItems = useMemo(() => [
-    { id: 'all', nombre: 'Todos los Empleados' }, // Texto cambiado
+    { id: 'all', nombre: 'Todos los Empleados' }, 
     ...sectores
   ], [sectores]);
 
@@ -402,7 +402,7 @@ const EmpleadosTab = ({ sectores }) => {
 };
 
 
-// --- Tab 3: Gestión de Tareas ---
+
 const TareasTab = ({ sectores, isFocused }) => {
   const [loading, setLoading] = useState(true);
   const [tareasList, setTareasList] = useState([]);
@@ -431,14 +431,14 @@ const TareasTab = ({ sectores, isFocused }) => {
     return tareasList.filter(t => filterEstado === 'all' || t.estado === filterEstado).sort((a, b) => {
         const dateA = a.fechaInicio?.toDate() || 0;
         const dateB = b.fechaInicio?.toDate() || 0;
-        return dateB - dateA; // Más recientes primero
+        return dateB - dateA; 
     });
   }, [tareasList, filterEstado]);
   
   const getStatusStyle = (estado) => {
      switch (estado) {
-      case 'pendiente': return styles.statusEnEspera; // Amarillo
-      case 'completada': return styles.statusRecibido; // Verde
+      case 'pendiente': return styles.statusEnEspera; 
+      case 'completada': return styles.statusRecibido; 
       default: return styles.roleMaquinaria;
     }
   };
@@ -459,7 +459,7 @@ const TareasTab = ({ sectores, isFocused }) => {
           onPress: async () => {
             try {
               await marcarTareaCompletada(tareaId);
-              fetchTasks(); // Recarga la lista
+              fetchTasks(); 
             } catch (error) {
               Alert.alert("Error", error.message);
             }
@@ -536,7 +536,7 @@ const TareasTab = ({ sectores, isFocused }) => {
 };
 
 
-// --- Componente Principal del Módulo de Sectores (TabView Wrapper) ---
+
 export default function GestionSectores() {
   const [viewMode, setViewMode] = useState('list'); 
   const [refreshKey, setRefreshKey] = useState(0);
@@ -544,7 +544,7 @@ export default function GestionSectores() {
   const [index, setIndex] = useState(0);
   const [sectores, setSectores] = useState([]); 
 
-  // Cargamos los sectores una sola vez para pasarlos a los tabs
+  
   const loadSectores = async () => {
     try {
       const data = await fetchSectores();
@@ -553,7 +553,7 @@ export default function GestionSectores() {
       console.error("Error loading sectors for tab view:", e);
     }
   };
-  // --- MODIFICADO: Recarga sectores si el refreshKey cambia ---
+  
   useEffect(() => { loadSectores(); }, [refreshKey]);
 
 
@@ -566,7 +566,7 @@ export default function GestionSectores() {
     setViewMode('list');
     setEditingSector(null);
     if (refresh) {
-      // Recarga la lista de sectores para la vista principal y los tabs
+      
       setRefreshKey(prevKey => prevKey + 1);
     }
   };

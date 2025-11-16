@@ -1,4 +1,4 @@
-// src/services/compraService.js
+
 import { collection, getDocs, query, orderBy, doc, setDoc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 
@@ -9,15 +9,15 @@ const comprasCollection = collection(db, "compras");
  * Basado en H027 y tu nueva solicitud.
  */
 export const createCompra = async (formData) => {
-    // --- CAMBIOS AQUÍ ---
-    // Se elimina 'total', se añade 'solicitanteEmail'
+    
+    
     const { proveedorId, proveedorNombre, items, fecha_entrega_deseada, deposito_area, solicitanteEmail } = formData;
 
-    // Se actualiza la validación
+    
     if (!proveedorId || !items || !solicitanteEmail) {
         return { success: false, error: "Proveedor, Items y Solicitante son obligatorios." };
     }
-    // --- FIN DE CAMBIOS ---
+    
 
     try {
         const newCompraRef = doc(comprasCollection);
@@ -27,10 +27,10 @@ export const createCompra = async (formData) => {
             proveedorId: proveedorId,
             proveedorNombre: proveedorNombre, 
             items: items,
-            // total: (ya no existe)
+            
             fecha_entrega_deseada: fecha_entrega_deseada || '',
             deposito_area: deposito_area || '',
-            solicitanteEmail: solicitanteEmail, // <-- AÑADIDO
+            solicitanteEmail: solicitanteEmail, 
             fecha_solicitud: Timestamp.now(), 
             estado: 'Pendiente' 
         });

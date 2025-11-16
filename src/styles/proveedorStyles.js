@@ -1,8 +1,8 @@
-// src/styles/proveedorStyles.js
+
 import { StyleSheet } from 'react-native';
 
 const COLORES = {
-  primario: '#059669', // Un verde para el proveedor
+  primario: '#059669', 
   fondo: '#F9FAFB',
   blanco: '#FFFFFF',
   texto: '#1F2937',
@@ -20,7 +20,7 @@ export default StyleSheet.create({
   header: {
     backgroundColor: COLORES.blanco,
     paddingHorizontal: 20,
-    paddingTop: 40, // Espacio para la barra de estado
+    paddingTop: 40, 
     paddingBottom: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -54,23 +54,23 @@ export default StyleSheet.create({
     fontWeight: '500',
   },
   
-  // --- (INICIO DE MODIFICACIÓN) ---
+  
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20, // Añadido por si acaso
+    padding: 20, 
   },
   loadingIndicator: {
-    // Este estilo se aplicará al ActivityIndicator
-    // No necesita 'color' aquí, se pasa como prop en el componente
+    
+    
   },
   loadingText: {
     marginTop: 10,
-    color: COLORES.gris, // <-- Se usa COLORES aquí
+    color: COLORES.gris, 
     fontSize: 14,
   },
-  // --- (FIN DE MODIFICACIÓN) ---
+  
 
   emptyText: {
     textAlign: 'center',
@@ -117,7 +117,7 @@ export default StyleSheet.create({
   },
   cardValueDate: {
     fontSize: 14,
-    color: COLORES.primario, // Resaltar la fecha
+    color: COLORES.primario, 
     fontWeight: 'bold',
     textAlign: 'right',
   },

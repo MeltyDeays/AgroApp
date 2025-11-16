@@ -1,4 +1,4 @@
-// src/components/NotificationBellAdmin.js
+
 import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
@@ -21,11 +21,11 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
   const [adminNotifications, setAdminNotifications] = useState([]);
 
   const [respuestasPedidos, setRespuestasPedidos] = useState([]);
-  const { getUserFullName } = useUsers(); // <-- Obtenemos la función
+  const { getUserFullName } = useUsers(); 
   const user = auth.currentUser;
 
   useEffect(() => {
-    // Escucha las solicitudes pendientes de maquinaria
+    
     const unsubReservas = MaquinariaService.streamReservasPendientes((data) => {
       const typedData = data.map((d) => ({
         ...d,
@@ -34,7 +34,7 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
       setSolicitudes(typedData);
     });
 
-    // Escucha las notificaciones generales de admin (devoluciones, etc.)
+    
     const unsubAdmin = MaquinariaService.streamNotificacionesAdmin((data) => {
       const typedData = data.map((d) => ({
         ...d,
@@ -43,13 +43,13 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
       setAdminNotifications(typedData);
     });
 
-    // (NUEVO) Escucha las respuestas de los proveedores
+    
     let unsubPedidos = () => {};
     if (user) {
       unsubPedidos = PedidoService.streamRespuestasProveedor(
         user.uid,
         (data) => {
-          // El tipo 'pedidoRespuesta' ya se añade en el servicio
+          
           setRespuestasPedidos(data);
         }
       );
@@ -62,7 +62,7 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
     };
   }, [user]);
 
-  // Combinar y ordenar todas las notificaciones
+  
   const allNotifications = useMemo(() => {
     const combined = [
       ...solicitudes,
@@ -70,7 +70,7 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
       ...respuestasPedidos,
     ];
 
-    // Ordenar por fecha de creación, las más nuevas primero
+    
     combined.sort((a, b) => {
       const dateA =
         a.createdAt?.toDate() ||
@@ -95,24 +95,24 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
 
   const handleItemClick = (item) => {
     if (item.notificationType === "pending") {
-      // Click en solicitud de maquinaria
+      
       if (onNotificationClick) {
-        onNotificationClick(item); // Navega a 'maquinaria'
+        onNotificationClick(item); 
       }
     } else if (item.notificationType === "return") {
-      // Click en devolución de maquinaria
+      
       MaquinariaService.marcarNotificacionAdminLeida(item.id);
     } else if (item.notificationType === "pedidoRespuesta") {
-      // (NUEVO) Click en respuesta de proveedor
+      
       PedidoService.marcarRespuestaPedidoLeida(item.id);
-      // if (onNotificationClick) onNotificationClick(item); // Podrías navegar a 'compras'
+      
     }
 
     setModalVisible(false);
   };
 
   const renderNotifItem = ({ item }) => {
-    // Caso 1: Solicitud de Maquinaria
+    
     if (item.notificationType === "pending") {
       return (
         <TouchableOpacity
@@ -137,7 +137,7 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
       );
     }
 
-    // Caso 2: Devolución de Maquinaria
+    
     if (item.notificationType === "return") {
       return (
         <TouchableOpacity
@@ -160,14 +160,14 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
       );
     }
 
-    // --- (INICIO DE MODIFICACIÓN) ---
-    // (NUEVO) Caso 3: Respuesta de Proveedor
+    
+    
     if (item.notificationType === "pedidoRespuesta") {
       const isAccepted = item.estado === "En proceso";
       const title = isAccepted ? "Pedido Aceptado" : "Pedido Rechazado";
-      const color = isAccepted ? "#1D4ED8" : "#B91C1C"; // Azul o Rojo
+      const color = isAccepted ? "#1D4ED8" : "#B91C1C"; 
 
-      // Usamos getUserFullName (que ahora funciona) o un texto alternativo
+      
       const providerName =
         getUserFullName(item.idProveedor) ||
         `Proveedor ${item.idProveedor.substring(0, 5)}...`;
@@ -199,9 +199,9 @@ export default function NotificationBellAdmin({ onNotificationClick }) {
         </TouchableOpacity>
       );
     }
-    // --- (FIN DE MODIFICACIÓN) ---
+    
 
-    return null; // No renderizar otros tipos por ahora
+    return null; 
   };
 
   return (

@@ -1,4 +1,4 @@
-// src/views/InicioEmpleado.js
+
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -6,7 +6,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
 import styles from '../styles/empleadoStyles'; 
 import { CheckSquare, Tractor, LogOut } from 'lucide-react-native'; 
-// --- 1. Importa la campana ---
+
 import NotificationBellEmpleado from '../components/NotificationBellEmpleado'; 
 
 export default function InicioEmpleado() {
@@ -69,7 +69,7 @@ export default function InicioEmpleado() {
             </Text>
             <TouchableOpacity
               style={[styles.primaryButton, { backgroundColor: '#2563EB' }]} 
-              onPress={() => navigation.navigate('GestionMaquinariaEmpleado')} // Navega a la vista de empleado
+              onPress={() => navigation.navigate('GestionMaquinariaEmpleado')} 
             >
               <Text style={styles.primaryButtonText}>Ir a Maquinaria</Text>
             </TouchableOpacity>
