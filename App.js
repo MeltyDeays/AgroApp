@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
@@ -24,6 +22,9 @@ import GestionMaquinariaEmpleado from "./src/views/empleado_modules/GestionMaqui
 
 import InicioProveedor from "./src/views/proveedor_modules/InicioProveedor.js";
 
+// --- (INICIO DE MODIFICACIÓN) ---
+import InicioSocio from "./src/views/socio_modules/InicioSocio.js";
+// --- (FIN DE MODIFICACIÓN) ---
 
 
 import MapaFinca from "./src/views/admin_modules/MapaFinca.js";
@@ -51,16 +52,11 @@ const AdminStack = () => (
       component={InicioAdministrador}
       options={{ headerShown: false }}
     />
-    
-    {/* --- (INICIO DE MODIFICACIÓN) --- */}
-    {/* 2. Añadir la pantalla del Mapa al Stack del Admin */}
     <Stack.Screen
       name="MapaFinca"
       component={MapaFinca}
       options={{ headerShown: false }}
     />
-    {/* --- (FIN DE MODIFICACIÓN) --- */}
-
   </Stack.Navigator>
   
 );
@@ -97,6 +93,19 @@ const ProveedorStack = () => (
   </Stack.Navigator>
 );
 
+// --- (INICIO DE MODIFICACIÓN) ---
+// 5. Añadir la pila de navegación para el Socio
+const SocioStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="InicioSocio"
+      component={InicioSocio}
+      options={{ headerShown: false }}
+    />
+    {/* Aquí podrías añadir más pantallas para el socio, como "Mis Pedidos" */}
+  </Stack.Navigator>
+);
+// --- (FIN DE MODIFICACIÓN) ---
 
 
 export default function App() {
@@ -155,6 +164,10 @@ export default function App() {
               return <EmployeeStack />;
             case 'proveedor': 
               return <ProveedorStack />;
+            // --- (INICIO DE MODIFICACIÓN) ---
+            case 'socio':
+              return <SocioStack />;
+            // --- (FIN DE MODIFICACIÓN) ---
             default:
               return <AuthStack />;
           }
