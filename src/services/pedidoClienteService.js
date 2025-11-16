@@ -12,8 +12,11 @@ import {
   runTransaction,
   writeBatch,
   getDocs,
-  serverTimestamp // <-- 1. IMPORTAR serverTimestamp
+  serverTimestamp,
+  getDoc
 } from 'firebase/firestore';
+
+import { getAuth } from 'firebase/auth';
 
 import { convertirAKilos } from './almacenService';
 import { streamProductos } from './productoService'; 
@@ -37,7 +40,7 @@ export const createPedidoCliente = async (userId, userName, cartItems, total, pa
       paymentDetails: paymentDetails || null, 
       direccionEntrega: direccion, 
       estado: 'Pendiente', 
-      fechaPedido: Timestamp.now(), // Esto está bien para 'crear'
+      fechaPedido: Timestamp.now(), 
       socioNotificado: true, 
     });
     return { success: true };
@@ -73,7 +76,6 @@ export const streamPedidosCliente = (userId, callback) => {
   return unsubscribe;
 };
 
-// --- (INICIO DE NUEVAS FUNCIONES) ---
 
 /**
  * (Para Socio - Notificaciones) Escucha pedidos con estado cambiado.
@@ -128,25 +130,52 @@ export const marcarPedidosComoVistos = async (userId) => {
  */
 export const completarPedidoSocio = async (pedidoId) => {
   try {
+    const auth = getAuth();
+    const currentUserId = auth.currentUser?.uid;
+    console.log('UID autenticado actual:', currentUserId); // Log para depurar UID
+    if (!currentUserId) {
+      throw new Error('Usuario no autenticado. Inicia sesión para completar el pedido.');
+    }
+
     const pedidoRef = doc(db, "pedidosCliente", pedidoId);
-    // --- (INICIO DE CORRECCIÓN) ---
-    await updateDoc(pedidoRef, {
-      estado: 'Completado',
-      fechaCompletado: serverTimestamp() // <-- 2. Usar serverTimestamp()
+    
+    // Usamos transacción para releer en servidor y evitar inconsistencias
+    await runTransaction(db, async (transaction) => {
+      const pedidoSnap = await transaction.get(pedidoRef);
+      if (!pedidoSnap.exists()) {
+        throw new Error('El pedido no existe.');
+      }
+
+      const pedidoData = pedidoSnap.data();
+      console.log('Datos completos del pedido (desde servidor):', pedidoData); // Log detallado del pedido
+      console.log('SocioId en el pedido:', pedidoData.socioId); // Log específico
+      console.log('Estado actual en el pedido:', pedidoData.estado); // Log específico
+
+      if (pedidoData.socioId !== currentUserId) {
+        throw new Error('No tienes permiso para completar este pedido (socioId no coincide con tu UID).');
+      }
+
+      if (pedidoData.estado !== 'Aprobado') {
+        throw new Error(`El pedido no puede completarse porque su estado actual es "${pedidoData.estado}". Debe estar "Aprobado".`);
+      }
+
+      // Si todo está OK, actualiza
+      transaction.update(pedidoRef, {
+        estado: 'Completado',
+        fechaCompletado: serverTimestamp()
+      });
     });
-    // --- (FIN DE CORRECCIÓN) ---
+
+    console.log('Pedido completado exitosamente.'); // Log de éxito
     return { success: true };
   } catch (error) {
-    console.error("Error al completar pedido:", error);
-    // Este error es el que estás viendo
-    throw error; 
+    console.error("Error detallado al completar pedido:", error); // Log con stack trace completo
+    return { success: false, error: error.message };
   }
 };
 
-// --- (FIN DE NUEVAS FUNCIONES) ---
 
-
-// --- (FUNCIONES DE ADMIN MODIFICADAS) ---
+// --- FUNCIONES DE ADMIN ---
 
 /**
  * (Para Admin) Escucha todos los pedidos.
